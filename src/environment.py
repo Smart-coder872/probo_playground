@@ -7,7 +7,7 @@ Critically, the environment tracks the robot's state. In this case, the robot's 
 """
 
 from utils import Position, Pose, Bounds, Landmark, BearingRange
-
+from numpy import sqrt, atan2
 
 class Environment:
     """
@@ -28,6 +28,7 @@ class Environment:
         obstacles: list[Bounds],
         landmarks: list[Landmark],
         robot_starting_pose: Pose,
+        bearing: BearingRange
     ):
         """
         Initialize an instance of the Environment class.
@@ -39,21 +40,22 @@ class Environment:
             landmarks: a list of landmarks
             robot_starting_pose: the initial position and heading of the robot
         """
-        # TODO: set the dimensions property to the parameter value
-        self.DIMENSIONS = None
+        # TODO (done): set the dimensions property to the parameter value
+        self.DIMENSIONS = dimensions
 
-        # TODO: set the timestep size property to the parameter value
-        self.DT = None
+        # TODO (done): set the timestep size property to the parameter value
+        self.DT = dt
 
-        # TODO: set the current time to zero
-        self.time = None
+        # TODO (done): set the current time to zero
+        self.time = 0.0
 
-        # TODO: set the obstacles and landmarks properties to the parameter lists
-        self.OBSTACLES = None
-        self.LANDMARKS = None
+        # TODO (done): set the obstacles and landmarks properties to the parameter lists
+        self.OBSTACLES = obstacles
+        self.LANDMARKS = landmarks
+        self.BEARING = bearing
 
-        # TODO: set the robot pose property to the parameter value
-        self.robot_pose = None
+        # TODO (done): set the robot pose property to the parameter value
+        self.robot_pose = robot_starting_pose
 
     def robot_step(self, dx: float, dy: float, dtheta: float):
         """
@@ -67,10 +69,16 @@ class Environment:
         Returns:
             Nothing, but update the robot_pose property at the end
         """
-        # TODO: fill in the function
-        pass
+        # TODO: (done) fill in the function
+        self.robot_pose.pos.x += dx ##Update x
+        self.robot_pose.pos.y += dy ##Update y
+        
+        self.robot_pose.theta += dtheta ##Update heading
+        
+        self.time += self.DT ##Update time step
+        
 
-    def is_valid_motion(self, dx: float, dy: float):
+    def is_valid_motion(self, dx: float, dy: float, dtheta: float):
         """
         Given attempted x and y motion by the robot, determine what motion is physically possible (i.e. doesn't go through any obstacles or barriers). Return the actual motion that will be executed.
 
@@ -82,8 +90,16 @@ class Environment:
             dx: change in x position that should be executed
             dy: change in y position that should be executed
         """
-        # TODO: fill in the function
-        pass
+
+        
+        # TODO: (done) fill in the function
+        if self.DIMENSIONS.within_bounds(Position(dx, dy)): ##if dx and dy are valid
+            self.robot_step(dx, dy, dtheta) ##update robot pose
+            return self.robot_pose        ##output the new heading and position
+        elif not self.DIMENSIONS.within_x(dx): ##if dx is not valid
+            print("Changing x motion by " + dx + "causes a collision or is out of bounds" ) ##print dx error message
+        elif not self.DIMENSIONS.within_y(dy): ##if dy is not valid
+            print("Changing y motion by " + dy + "causes a collision or is out of bounds") ##print dy error message
 
     def is_valid_position(self, position: Position):
         """
@@ -95,29 +111,39 @@ class Environment:
         Returns:
             true if the position is valid and false otherwise
         """
-        # TODO: fill in the function
-        pass
+        # TODO: (done) fill in the function
+        if self.DIMENSIONS.within_bounds(position): #if the robot position is within bounds
+            return True                  #this function is true
+        else:                            #otherwise          
+            return False                 #this function is false
 
     def get_robot_pose(self):
         """
         Return the true robot pose.
         """
-        # TODO: fill in the function
-        pass
+        # TODO: (done) fill in the function
+        return self.robot_pose          #output current robot position and heading
 
     def get_proximity_to_landmarks(self):
         """
         Return a list of the robot's true range and bearing to all landmarks.
         """
-        # TODO: fill in the function
-        pass
+        # TODO: (done) fill in the function
+        for l in self.LANDMARKS:
+            x_range = l.pos.x - self.robot_pose.pos.x
+            y_range = l.pos.y - self.robot_pose.pos.y
+            range = sqrt(x_range**2 + y_range**2)
+            total_angle = atan2(y_range/x_range)
+            self.BEARING = total_angle - self.robot_pose.theta
+            print("Robot bearing to " + l + "is " + self.BEARING + "and robot true range is " + range) 
+            break        
 
     def take_state_snapshot(self):
         """
         Return true state information about this timestep, including time, robot position, and the robot's bearing/range to landmarks, in a table format.
         """
         # TODO: fill in the function
-        pass
+        return 
 
     def get_environment_info(self):
         """

@@ -10,6 +10,7 @@ Proprioceptive sensors measure the robot's relationship to its past states. This
 
 from abc import ABC, abstractmethod
 from math import pi
+from environment import Environment
 
 
 class SensorInterface(ABC):
@@ -107,8 +108,8 @@ class WheelEncoder(SensorInterface):
         """
         super().__init__(name, robot, interval)
         # TODO: save all noise constants as properties
-        self.LIN_NOISE = None  # m/s
-        self.ANG_NOISE = None  # rad/s
+        self.LIN_NOISE = lin_noise  # m/s
+        self.ANG_NOISE = ang_noise  # rad/s
 
     def sample(self):
         """

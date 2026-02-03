@@ -51,10 +51,11 @@ if __name__ == "__main__":
             # TODO: retrieve the next motor command from the input file
 
             # TODO: execute the motor command
-
+            pass
     # at the end, write the histories into output files
     with open(output_ground_truth_filepath, "w") as gt_data:
         # TODO: write ground_truth_history to a file
-
+        pass
     with open(output_sensor_data_filepath, "w") as sensor_data:
         # TODO: write sensor_data_history to a file
+        pass

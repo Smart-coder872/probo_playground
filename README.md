@@ -1,5 +1,5 @@
 # Probabilistic Robotics Playground: 2D Mobile Robot Simulation Environment
-> **Developed by [your name here!]**
+> **Developed by Mik Miller**
 > 
 > **Contributors:** [anyone you worked with!]
 
@@ -33,3 +33,5 @@ At minimum, your simulator should include the following features:
 - Classes to model at least one proprioceptive sensor (wheel encoders, IMU) and at least one exteroceptive sensor (GPS, beacon-range to landmarks, LIDAR); each sensor must take noisy samples of the ground truth at specific intervals
 - Functionality to write an output file listing ground truth data and sensor data by timestep
 - An easy-to-read README with details on how to run the simulator, and a requirements.txt file listing all dependencies
+## Notes
+Comments that already existed use "#" and comments I added use "##"

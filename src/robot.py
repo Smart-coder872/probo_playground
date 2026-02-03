@@ -6,6 +6,7 @@ The Robot class models the robotic agent that explores the world. The robot is r
 
 from environment import Environment
 from sensors import SensorInterface
+from numpy import cos, sin
 
 
 class Robot:
@@ -24,8 +25,8 @@ class Robot:
         Args:
             env: the environment this robot is operating in
         """
-        # TODO: set the environment property to the parameter value
-        self.env = None
+        # TODO: (done) set the environment property to the parameter value
+        self.env = env
         # TODO: initialize the sensors property as an empty list
         self.sensors = []
 
@@ -42,8 +43,13 @@ class Robot:
             dy: change in y position
             d-theta: change in heading
         """
-        # TODO: fill in the function
-        pass
+        # TODO: (done) fill in the function
+        dy = lin_vel * cos(self.env.robot_pose.theta) * self.env.DT #converts linear velocity input to dy
+        dx = lin_vel * sin(self.env.robot_pose.theta) * self.env.DT #converts linear velocity input to dx
+        dtheta = ang_vel * self.env.robot_pose.theta                #converts angular velocity input to dtheta
+
+
+        return self.env.is_valid_motion(dx, dy, dtheta)
 
     def robot_step_translational(self, x_vel: float, y_vel: float, ang_vel: float):
         """
@@ -59,8 +65,12 @@ class Robot:
             dy: change in y position
             d-theta: change in heading
         """
-        # TODO: fill in the function
-        pass
+        # TODO: (done) fill in the function
+        dx = x_vel * self.env.DT
+        dy = y_vel * self.env.DT
+        dtheta = ang_vel * self.env.DT
+
+        return self.env.is_valid_motion(dx, dy, dtheta)
 
     def take_sensor_measurements(self):
         """
