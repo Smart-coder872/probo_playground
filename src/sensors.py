@@ -11,6 +11,7 @@ Proprioceptive sensors measure the robot's relationship to its past states. This
 from abc import ABC, abstractmethod
 from math import pi
 from environment import Environment
+from random import gauss
 
 
 class SensorInterface(ABC):
@@ -116,7 +117,7 @@ class WheelEncoder(SensorInterface):
         Sample the robot's linear and angular velocity.
         """
         # TODO: fill in the function
-        pass
+        
 
 
 class LandmarkPinger(SensorInterface):
@@ -163,4 +164,5 @@ class LandmarkPinger(SensorInterface):
         Reports noisy measurements of the bearing and range between the robot and all nearby landmarks.
         """
         # TODO: fill in the function
-        pass
+        self.env.robot_pose.
+        range = self.RANGE_NOISE

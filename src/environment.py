@@ -8,6 +8,7 @@ Critically, the environment tracks the robot's state. In this case, the robot's 
 
 from utils import Position, Pose, Bounds, Landmark, BearingRange
 from numpy import sqrt, atan2
+from pandas import DataFrame
 
 class Environment:
     """
@@ -143,7 +144,7 @@ class Environment:
         Return true state information about this timestep, including time, robot position, and the robot's bearing/range to landmarks, in a table format.
         """
         # TODO: fill in the function
-        return 
+        pass
 
     def get_environment_info(self):
         """
