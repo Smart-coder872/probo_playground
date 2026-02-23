@@ -208,8 +208,7 @@ class LandmarkPinger(SensorInterface):
         Reports noisy measurements of the bearing and range between the robot and all nearby landmarks.
         """
         # TODO: fill in the function
-        self.env.robot_pose.
-        range = self.RANGE_NOISE
+        pass
 
     def R(self, z):
         """

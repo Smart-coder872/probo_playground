@@ -62,23 +62,23 @@ if __name__ == "__main__":
     with open(input_commands_filepath, "r") as cmd:
         # iterate through each timestep
         for step in range(int(total_timesteps) + 1):
-            # TODO: take a ground truth snapshot and add it to the history
-
-            # TODO: take sensor measurements and add it to the history
-
+            # TODO: (done) take a ground truth snapshot and add it to the history
+            env.take_state_snapshot(step)
+            # TODO: (done) take sensor measurements and add it to the history
+            robot.take_sensor_measurements(step)
             if LINEAR:
                 # TODO: call the Kalman Filter prediction step
-
+                kf.predict()
                 # TODO: call the Kalman Filter update step if new sensor data is available
-                pass
+                kf.update()
             else:
                 # TODO: call the Extended Kalman Filter prediction step
-
+                kf.predict()
                 # TODO: call the Extended Kalman Filter update step if new sensor data is available, for each GPS reading and for each landmark ping
-                pass
+                kf.update()
 
             # TODO: retrieve the next motor command from the input file
-
+            
             # TODO: execute the motor command
             pass
     # at the end, write the histories into output files

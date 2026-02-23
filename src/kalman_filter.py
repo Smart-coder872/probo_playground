@@ -10,7 +10,9 @@ u = [v_x, v_y, w]
 
 import numpy as np
 import random
-
+import sympy
+from numpy import ndarray
+from sympy import Identity, Inverse, matrix2numpy
 
 class KalmanFilter:
     """
@@ -25,7 +27,7 @@ class KalmanFilter:
         Q: the process noise, modeling unexpected disturbance in state transitions
     """
 
-    def __init__(self, dt: float, prior: np.ndarray):
+    def __init__(self, dt: float, prior: ndarray):
         """
         Initialize an instance of the KalmanFilter class.
 
@@ -33,25 +35,33 @@ class KalmanFilter:
             dt: the length of each timestep, in seconds
             prior: the initial estimates for each state variable
         """
-        # TODO: set the timestep size to the given parameter
-        self.DT: float = None
+        # TODO: (done) set the timestep size to the given parameter
+        self.DT: float = dt
 
-        # TODO: set the state vector to the given prior
-        self.x: np.ndarray = None
+        # TODO: (done) set the state vector to the given prior
+        self.x: ndarray = prior
 
-        # TODO: set the process model to an identity matrix
-        self.P: np.ndarray = None
+        # TODO: (done) set the process model to an identity matrix
+        self.P: ndarray = matrix2numpy(Identity(len(prior)))
 
-        # TODO: define the motion model
-        self.F: np.ndarray = None
+        # TODO: (done) define the motion model
+        self.F: ndarray = ndarray(
+            [1, self.DT],
+            [0, 1]
+        )
 
-        # TODO: define the control model
-        self.B: np.ndarray = None
+        # TODO: (done) define the control model
+        self.B: ndarray = ndarray(
+            [self.DT, 0, 0],
+            [0, self.DT, 0],
+            [0, 0, self.DT]
 
-        # TODO: define the process noise
-        self.Q: np.ndarray = None
+        )
 
-    def predict(self, u: np.ndarray):
+        # TODO: (done) define the process noise
+        self.Q: ndarray = self.get_Q()
+
+    def predict(self, u: ndarray):
         """
         Predicts the next state vector and its covariance matrix using the state transition matrix and an input control vector. The Kalman Filter uses the following predict equations:
 
@@ -61,15 +71,15 @@ class KalmanFilter:
         Args:
             u: the input control vector
         """
-        # TODO: update the state vector using the state transition matrix and the given control input
-        self.x = None
+        # TODO: (done) update the state vector using the state transition matrix and the given control input
+        self.x = self.F * self.x + self.B * u
 
-        # TODO: update the process model by propagating it through the state transition matrix and adding noise
-        self.P = None
+        # TODO: (done) update the process model by propagating it through the state transition matrix and adding noise
+        self.P = self.F * self.P * (self.F).T + self.Q
 
         return self.x, self.P
 
-    def update(self, z, H, R):
+    def update(self, z, H: ndarray, R):
         """
         Updates the current state prediction using observations from the environment. The Kalman Filter uses the following update equations:
 
@@ -86,20 +96,20 @@ class KalmanFilter:
             H: the measurement model, which relates the state space to the measurement space
             R: the measurement noise model (covariance)
         """
-        # TODO: calculate the total uncertainty in the system
-        S = None
+        # TODO: (done) calculate the total uncertainty in the system
+        S = H * self.P * H.T + R
 
-        # TODO: calculate the Kalman Gain, AKA the percentage of the total uncertainty that came from the estimate rather than the measurement
-        K = None
+        # TODO: (done) calculate the Kalman Gain, AKA the percentage of the total uncertainty that came from the estimate rather than the measurement
+        K = self.P * H.T * matrix2numpy(Inverse(S))
 
-        # TODO: calculate the residual, AKA the error between the observation and what we expected the observation to be given our estimated state vector
-        y = None
+        # TODO: (done) calculate the residual, AKA the error between the observation and what we expected the observation to be given our estimated state vector
+        y = z - H *self.x
 
-        # TODO: update the state vector
-        self.x = None
+        # TODO: (done) update the state vector
+        self.x += K * y
 
-        # TODO: update the process model
-        self.P = None
+        # TODO: (done) update the process model
+        self.P -= K * H * self.P
 
         return self.x, self.P
 

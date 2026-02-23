@@ -143,12 +143,34 @@ class Environment:
         """
         Return true state information about this timestep, including time, robot position, and the robot's bearing/range to landmarks, in a table format.
         """
-        # TODO: fill in the function
-        pass
-
+        # TODO: (done) fill in the function
+       
+        current_time = self.time
+        
+        robo_pos = self.robot_pose.pos
+        
+        x_range = self.LANDMARKS.pos.x - self.robot_pose.pos.x
+        y_range = self.LANDMARKS.pos.y - self.robot_pose.pos.y
+        range = sqrt(x_range**2 + y_range**2)
+        
+        total_angle = atan2(y_range/x_range)
+        self.BEARING = total_angle - self.robot_pose.theta 
+        bearing = self.BEARING
+        
+        snapshot = DataFrame(
+            {"Time": [current_time],
+             "Robot pos": [robo_pos],
+             "Range:": [range],
+             "Bearing": [bearing]}
+        )
+        return snapshot
+    
     def get_environment_info(self):
         """
         Return static information about the environment, including dimensions, timestep size, locations and dimensions of obstacles, and locations of landmarks.
         """
-        # TODO: fill in the function
-        pass
+        # TODO: (done) fill in the function
+        print("Environment dimensions: " + self.DIMENSIONS +
+              "Timestep size: " + self.DT +
+              "Obstacle Locations/Dimensions: " + self.OBSTACLES +
+              "Landmark Locations: " + self.LANDMARKS) 

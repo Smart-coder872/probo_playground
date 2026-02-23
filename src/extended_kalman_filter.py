@@ -9,9 +9,10 @@ u = [v, w]
 """
 
 import numpy as np
+from numpy import cos, sin
 import sympy
 from sympy.abc import x, y, v, w, R, theta
-from sympy import Matrix, Symbol
+from sympy import Matrix, Symbol, Identity, Inverse, matrix2numpy, jacobian
 import random
 
 from utils import wrap_angle
@@ -36,26 +37,26 @@ class ExtendedKalmanFilter:
             dt: the length of each timestep, in seconds
             prior: the initial estimates for each state variable-
         """
-        # TODO: set the timestep size to the given parameter
-        self.DT: float = None
+        # TODO: (done) set the timestep size to the given parameter
+        self.DT:float = dt
 
-        # TODO: set the state vector to the given prior
-        self.x: np.ndarray = None
+        # TODO: (done) set the state vector to the given prior
+        self.x:np.ndarray = prior
 
-        # TODO: set the process model to an identity matrix
-        self.P: np.ndarray = None
+        # TODO: (done) set the process model to an identity matrix
+        self.P = matrix2numpy(Identity(len(prior)))
 
-        # TODO: define the nonlinear state transition model
+        # TODO: (done) define the nonlinear state transition model
         self.f_xu: Matrix = Matrix(
             [
-                [None],  # calculation of x
-                [None],  # calculation of y
-                [None],  # calculation of theta
+                [x + v*cos(theta)*self.DT],  # calculation of x
+                [y + v*sin(theta)*self.DT],  # calculation of y
+                [theta + w*self.DT],  # calculation of theta
             ]
         )
 
         # TODO: define the Jacobian of the motion model symbolically
-        self.F: Matrix = None
+        self.F: Matrix = self.f_xu.jacobian()
 
         # dictionary that maps Sympy symbols to numerical values. we will use these to substitute values into our symbolic matrices!
         self.subs: dict[Symbol, float] = {
@@ -86,7 +87,7 @@ class ExtendedKalmanFilter:
         self.subs[w] = None
 
         # TODO: evaluate the nonlinear motion model f(x,u) at the subsitution values
-        fxu_eval = None
+        fxu_eval = self.F(self.subs)
 
         # TODO: evaluate the Jacobian matrix F at the substitution values
         F_eval = None
@@ -125,20 +126,20 @@ class ExtendedKalmanFilter:
             R: the measurement noise model (covariance)
             y: the residual, which is the error between the measured observation and the observation expected by the predicted state
         """
-        # TODO: calculate the total uncertainty in the system
-        S = None
+        # TODO: (done) calculate the total uncertainty in the system
+        S = H * self.P * H.T + R
 
-        # TODO: calculate the Kalman Gain
-        K = None
+        # TODO: (done) calculate the Kalman Gain
+        K = self.P * H.T * matrix2numpy(Inverse(S))
 
         if y is None:
             y = z - H @ self.x_state
 
-        # TODO: update state vector
-        self.x_state = None
+        # TODO: (done) update state vector
+        self.x_state += K * y
 
-        # TODO: update process model
-        self.P = None
+        # TODO: (done) update process model
+        self.P -= K * H.T * self.P
 
         # return state vector and process model
         return self.x_state, self.P

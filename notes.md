@@ -26,4 +26,5 @@
 ## Questions
 - In the utils.py file, what is the difference between the object 'id' in the 'Landmark' class and the object 'landmark_id' in the 'Bearing Range' class?
 - In the utils.py file, what is bearing and what does the object 'bearing' in the "Bearing range" class represent?
-
+- kalman filter and extended kalman filter have similar init, what would happen if these were connected?
+- Is there a downside to importing the subpackage items ie from sympy import Identity?
