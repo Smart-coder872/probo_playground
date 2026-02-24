@@ -13,7 +13,6 @@ from math import pi
 
 import numpy as np
 
-import sympy
 from sympy.abc import x, y, k, j, theta
 from sympy import symbols, Matrix, Symbol, pprint
 from environment import Environment
@@ -98,10 +97,13 @@ class WheelEncoder(SensorInterface):
     def __init__(
         self,
         robot,
+        linear_noise_ratio,
+        angular_noise_ratio,
         name="wheel_encoder",
         interval=0.1,
         lin_noise=0.05,
-        ang_noise=0.03,
+        ang_noise=0.03
+        
     ):
         """
         Initialize an instance of the WheelEncoder class.
@@ -117,15 +119,24 @@ class WheelEncoder(SensorInterface):
         # TODO: (done) save all noise constants as properties
         self.LIN_NOISE = lin_noise  # m/s
         self.ANG_NOISE = ang_noise  # rad/s
+        self.LIN_NOISE_RATIO = linear_noise_ratio
+        self.ANG_NOISE_RATIO = angular_noise_ratio
+
 
     def sample(self):
         """
         Sample the robot's linear and angular velocity.
         """
         # TODO: fill in the function
+        actual_lin_vel = self.robot.LIN_VEL
+        actual_ang_vel = self.robot.ANG_VEL
         
+        lin_sample = gauss(actual_lin_vel, self.LIN_NOISE + abs(actual_lin_vel) * self.LIN_NOISE_RATIO)
+        ang_sample = gauss(actual_ang_vel, self.ANG_NOISE + abs(actual_ang_vel) * self.ANG_NOISE_RATIO)
 
-
+        print("Linear Velocity Sample:" + lin_sample +
+              "Angular Velocity Sample:" + ang_sample
+        )
 class LandmarkPinger(SensorInterface):
     """
     This class represents a sensor that measures the range and bearing between the robot and the floating-point landmarks on the map. In practice, this sensor could be a ToF sensor, a node in a network of beacons, or even a camera.

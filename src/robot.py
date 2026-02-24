@@ -7,6 +7,7 @@ The Robot class models the robotic agent that explores the world. The robot is r
 from environment import Environment
 from sensors import SensorInterface
 from numpy import cos, sin
+from pandas import DataFrame
 
 
 class Robot:
@@ -28,7 +29,10 @@ class Robot:
         # TODO: (done) set the environment property to the parameter value
         self.env = env
         # TODO: initialize the sensors property as an empty list
-        self.sensors = []
+        self.sensors = [SensorInterface.WheelEncoder, 
+                        SensorInterface.LandmarkPinger,
+                        SensorInterface.GPS
+                        ]
 
     def robot_step_differential(self, lin_vel: float, ang_vel: float):
         """
@@ -44,6 +48,9 @@ class Robot:
             d-theta: change in heading
         """
         # TODO: (done) fill in the function
+        self.LIN_VEL = lin_vel
+        self.ANG_VEL = ang_vel
+       
         dy = lin_vel * cos(self.env.robot_pose.theta) * self.env.DT #converts linear velocity input to dy
         dx = lin_vel * sin(self.env.robot_pose.theta) * self.env.DT #converts linear velocity input to dx
         dtheta = ang_vel * self.env.robot_pose.theta                #converts angular velocity input to dtheta
@@ -66,6 +73,9 @@ class Robot:
             d-theta: change in heading
         """
         # TODO: (done) fill in the function
+        self.X_vel = x_vel
+        self.Y_vel = y_vel
+        
         dx = x_vel * self.env.DT
         dy = y_vel * self.env.DT
         dtheta = ang_vel * self.env.DT
@@ -77,4 +87,10 @@ class Robot:
         Return noisy sensor readings of the environment at this timestep, including data from all sensors, in a table format.
         """
         # TODO: fill in the function
-        pass
+        sensor_measurements = DataFrame(
+            {"Wheel Encoder": [self.sensors[0].sample(self)],
+             "LandmarkPinger": [self.sensors[1].sample(self)],
+             "GPS": [self.sensors[2].sample(self)]
+            }
+        )
+        return sensor_measurements

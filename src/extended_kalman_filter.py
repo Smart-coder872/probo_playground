@@ -9,7 +9,7 @@ u = [v, w]
 """
 
 import numpy as np
-from numpy import cos, sin
+from numpy import cos, sin, ndarray
 import sympy
 from sympy.abc import x, y, v, w, R, theta
 from sympy import Matrix, Symbol, Identity, Inverse, matrix2numpy, jacobian
@@ -58,6 +58,12 @@ class ExtendedKalmanFilter:
         # TODO: define the Jacobian of the motion model symbolically
         self.F: Matrix = self.f_xu.jacobian()
 
+        self.B: ndarray = ndarray(
+            [self.DT, 0, 0],
+            [0, self.DT, 0],
+            [0, 0, self.DT]
+        )
+
         # dictionary that maps Sympy symbols to numerical values. we will use these to substitute values into our symbolic matrices!
         self.subs: dict[Symbol, float] = {
             x: self.x_state[0],
@@ -79,24 +85,24 @@ class ExtendedKalmanFilter:
         Args:
             u: the input control vector
         """
-        # TODO: set the value of each symbolic substitution to the actual numerical value being tracked by the EKF
-        self.subs[x] = None
-        self.subs[y] = None
-        self.subs[theta] = None
-        self.subs[v] = None
-        self.subs[w] = None
+        # TODO: (done) set the value of each symbolic substitution to the actual numerical value being tracked by the EKF
+        self.subs[x] = self.x[0]
+        self.subs[y] = self.x[1]
+        self.subs[theta] = self.x[2]
+        self.subs[v] = u[0]
+        self.subs[w] = u[1]
 
-        # TODO: evaluate the nonlinear motion model f(x,u) at the subsitution values
-        fxu_eval = self.F(self.subs)
+        # TODO: (done) evaluate the nonlinear motion model f(x,u) at the subsitution values
+        fxu_eval = matrix2numpy(self.f_xu.subs(self.subs))
 
-        # TODO: evaluate the Jacobian matrix F at the substitution values
-        F_eval = None
+        # TODO: (done) evaluate the Jacobian matrix F at the substitution values
+        F_eval = matrix2numpy(self.F.subs(fxu_eval))
 
-        # TODO: calculate the next state prediction
-        self.x = None
+        # TODO: (done) calculate the next state prediction
+        self.x = F_eval*self.x + self.B*u
 
-        # TODO: calculate the next covariance prediction
-        self.P = None
+        # TODO: (done) calculate the next covariance prediction
+        self.P = F_eval*self.P*F_eval.T + self.get_Q()
 
         # return state vector and state covariance
         return self.x_state, self.P
