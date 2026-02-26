@@ -28,3 +28,5 @@
 - In the utils.py file, what is bearing and what does the object 'bearing' in the "Bearing range" class represent?
 - kalman filter and extended kalman filter have similar init, what would happen if these were connected?
 - Is there a downside to importing the subpackage items ie from sympy import Identity?
+
+* What are 3 to 5 ideas for unit tests?

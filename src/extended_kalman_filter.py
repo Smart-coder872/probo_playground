@@ -55,7 +55,7 @@ class ExtendedKalmanFilter:
             ]
         )
 
-        # TODO: define the Jacobian of the motion model symbolically
+        # TODO: (done) define the Jacobian of the motion model symbolically
         self.F: Matrix = self.f_xu.jacobian()
 
         self.B: ndarray = ndarray(

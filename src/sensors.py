@@ -127,7 +127,7 @@ class WheelEncoder(SensorInterface):
         """
         Sample the robot's linear and angular velocity.
         """
-        # TODO: fill in the function
+        # TODO: (done) fill in the function
         actual_lin_vel = self.robot.LIN_VEL
         actual_ang_vel = self.robot.ANG_VEL
         
@@ -176,16 +176,16 @@ class LandmarkPinger(SensorInterface):
         self.RANGE_PROP_NOISE = range_prop_noise
         self.BEARING_NOISE = bearing_noise  # radians
 
-        # TODO: define the nonlinear measurement model symbolically
+        # TODO: (done) define the nonlinear measurement model symbolically
         self.h_x: Matrix = Matrix(
             [
-                [None],  # calculation of r (range)
-                [None],  # calculation of phi (bearing)
+                [Environment.self.RANGE],  # calculation of r (range)
+                [Environment.self.BEARING]  # calculation of phi (bearing)
             ]
         )
 
-        # TODO: define the Jacobian of h(x) symbolically
-        self.H: Matrix = None
+        # TODO: (done) define the Jacobian of h(x) symbolically
+        self.H: Matrix = self.h_x.jacobian()
 
         self.subs: dict[Symbol, float] = {
             x: 0.0,
@@ -195,31 +195,17 @@ class LandmarkPinger(SensorInterface):
             j: 0.0,
         }
 
-        # TODO: define the nonlinear measurement model symbolically
-        self.h_x: Matrix = Matrix(
-            [
-                [None],  # calculation of r (range)
-                [None],  # calculation of phi (bearing)
-            ]
-        )
-
-        # TODO: define the Jacobian of h(x) symbolically
-        self.H: Matrix = None
-
-        self.subs: dict[Symbol, float] = {
-            x: 0.0,
-            y: 0.0,
-            theta: 0.0,
-            k: 0.0,
-            j: 0.0,
-        }
 
     def sample(self):
         """
         Reports noisy measurements of the bearing and range between the robot and all nearby landmarks.
         """
-        # TODO: fill in the function
-        pass
+        # TODO: (done) fill in the function
+        noisy_range = gauss(Environment.self.RANGE, self.RANGE_NOISE + Environment.self.RANGE * self.RANGE_PROP_NOISE)
+        noisy_bearing = gauss(Environment.self.BEARING, self.BEARING_NOISE + Environment.self.BEARING)
+
+        print("Range w/ noise" + noisy_range +
+              "Bearing w/ noise" + noisy_bearing)
 
     def R(self, z):
         """
@@ -251,8 +237,8 @@ class LandmarkPinger(SensorInterface):
         self.subs[x] = None
         self.subs[y] = None
         self.subs[theta] = None
-        self.subs[j] = None  # note: we use j for landmark x position
-        self.subs[k] = None  # note: we use k for landmark y position
+        self.subs[j] = lm_x  # note: we use j for landmark x position
+        self.subs[k] = lm_y  # note: we use k for landmark y position
 
         # TODO: evaluate the Jacobian at the subs values and convert it to a numpy array
         H_eval = None
@@ -265,21 +251,21 @@ class LandmarkPinger(SensorInterface):
         Calculate the residual between an observation x and a predicted observation derived from a predicted state. The predicted observation is in reference to a specified landmark.
         """
         # TODO: find the x and y position of the given landmark
-        lm_x = None
-        lm_y = None
+        lm_x = self.LANDMARKS.pos.x
+        lm_y = self.LANDMARKS.pos.y
 
         # TODO: set the value of each symbolic substitution to the actual numerical value that was passed in
         self.subs[x] = None
         self.subs[y] = None
         self.subs[theta] = None
-        self.subs[j] = None  # note: we use j for landmark x position
-        self.subs[k] = None  # note: we use k for landmark y position
+        self.subs[j] = lm_x  # note: we use j for landmark x position
+        self.subs[k] = lm_y  # note: we use k for landmark y position
 
         # TODO: evaluate the measurement model at the subs values and convert it to a numpy array
         hx_eval = None
 
         # TODO: calculate the residual
-        y = None
+        y = z - hx_eval * x
 
         # return
         return y

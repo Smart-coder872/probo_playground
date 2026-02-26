@@ -98,9 +98,13 @@ class Environment:
             self.robot_step(dx, dy, dtheta) ##update robot pose
             return self.robot_pose        ##output the new heading and position
         elif not self.DIMENSIONS.within_x(dx): ##if dx is not valid
-            print("Changing x motion by " + dx + "causes a collision or is out of bounds" ) ##print dx error message
+            print("Changing x motion by " + 
+                  dx + 
+                  "causes a collision or is out of bounds" ) ##print dx error message
         elif not self.DIMENSIONS.within_y(dy): ##if dy is not valid
-            print("Changing y motion by " + dy + "causes a collision or is out of bounds") ##print dy error message
+            print("Changing y motion by " + 
+                  dy + 
+                  "causes a collision or is out of bounds") ##print dy error message
 
     def is_valid_position(self, position: Position):
         """
@@ -152,10 +156,11 @@ class Environment:
         x_range = self.LANDMARKS.pos.x - self.robot_pose.pos.x
         y_range = self.LANDMARKS.pos.y - self.robot_pose.pos.y
         range = sqrt(x_range**2 + y_range**2)
-        
+        self.RANGE = range
+
         total_angle = atan2(y_range/x_range)
-        self.BEARING = total_angle - self.robot_pose.theta 
-        bearing = self.BEARING
+        bearing = total_angle - self.robot_pose.theta 
+        self.BEARING = bearing
         
         snapshot = DataFrame(
             {"Time": [current_time],
