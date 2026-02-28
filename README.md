@@ -51,29 +51,29 @@ This is a brief overview of each of the files. For more details, check out 'note
 - Initalize instances for starting variables
 
 
-- Update robot position and heading  
+ 
 - Update robot position and heading
 
-+ dx, dy, dtheta --> **robot_step()** --> (Updated instances, no return)
+dx, dy, dtheta --> **robot_step()** --> (Updated instances, no return)
 
 - Verify attempted robot movement is valid using robot_step(), then update robot pose
 
-+ dx, dy, dtheta --> **is_valid_motion()** --> self.robot_pose (OR throws error)
+dx, dy, dtheta --> **is_valid_motion()** --> self.robot_pose (OR throws error)
 
 - Verify current robot position is valid
 
-+ Position(*variable*, *variable*) --> **is_valid_position()** --> (boolean)
+Position(*variable*, *variable*) --> **is_valid_position()** --> (boolean)
 
 - Get current robot pose
 
-+ **get_robot_pose()** --> self.robot_pose
+**get_robot_pose()** --> self.robot_pose
 
 - Get List of robot's true bearing and range to all landmarks
 
-+ **get_proximity_to_landmarks()** --> (Return time, robot position, and the robot's bearing/range
+**get_proximity_to_landmarks()** --> (Return time, robot position, and the robot's bearing/range
                                       to landmarks)
 
 - Return current state info as a table
 
-+ **take_state_snapshot()** --> (Return dimensions, timestep size, locations and dimensions
+**take_state_snapshot()** --> (Return dimensions, timestep size, locations and dimensions
                                of obstacles, and locations of landmarks)
