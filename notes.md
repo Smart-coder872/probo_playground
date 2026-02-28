@@ -11,22 +11,20 @@
     - Objects: 'pos' and 'id'
 - Bearing Range class --> landmark and robot relationship
     - Objects: 'landmark_id', 'bearing', 'range'
-## __init__
+
+## Environment file
+### environment __init__
 - dimensions: uses Bounds
 - dt: a float number
 - obstacles: uses Bounds listed
 - landmarks: uses Landmark listed
 - robot_starting_pose: uses Pose
 
-## Storage
-- self.robot pose = robot_starting_pose = Pose = theta + pos:Position = Position()
-- self.DIMENSIONS = dimensions = Bounds
+### IO functions
 
+
+### Getter functions
 
 ## Questions
+- In environment.py, why is 'is_valid_position' a boolean? 
 - In the utils.py file, what is the difference between the object 'id' in the 'Landmark' class and the object 'landmark_id' in the 'Bearing Range' class?
-- In the utils.py file, what is bearing and what does the object 'bearing' in the "Bearing range" class represent?
-- kalman filter and extended kalman filter have similar init, what would happen if these were connected?
-- Is there a downside to importing the subpackage items ie from sympy import Identity?
-
-* What are 3 to 5 ideas for unit tests?

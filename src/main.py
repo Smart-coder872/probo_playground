@@ -11,11 +11,11 @@ from utils import Position, Pose, Landmark, Bounds
 if __name__ == "__main__":
     # set up the environment
     # TODO: choose values for each input parameter, using the expected datatype
-    dimensions = None
-    dt = None
-    obstacles = []
-    landmarks = []
-    initial_robot_pose = None
+    dimensions = 50             #vertical length or horizontal length
+    dt = 1                      #1 step per seconds
+    obstacles = []              #
+    landmarks = []              #
+    initial_robot_pose = None   #
 
     env = Environment(
         dimensions,
@@ -43,9 +43,9 @@ if __name__ == "__main__":
         )
 
     # set up timekeeping
-    # TODO: set the total_seconds variable to however long you want the simulator to run (not real-time!)
-    total_seconds = None
-    total_timesteps = total_seconds / env.DT
+    # TODO: (done) set the total_seconds variable to however long you want the simulator to run (not real-time!)
+    total_seconds = 10                          #total run time
+    total_timesteps = total_seconds / env.DT    #calculate time step
 
     # set up logging
     ground_truth_history = []
@@ -67,15 +67,15 @@ if __name__ == "__main__":
             # TODO: (done) take sensor measurements and add it to the history
             robot.take_sensor_measurements(step)
             if LINEAR:
-                # TODO: call the Kalman Filter prediction step
-                kf.predict()
-                # TODO: call the Kalman Filter update step if new sensor data is available
-                kf.update()
+                # TODO: (done) call the Kalman Filter prediction step
+                kf.predict(step)
+                # TODO: (done) call the Kalman Filter update step if new sensor data is available
+                kf.update(step)
             else:
-                # TODO: call the Extended Kalman Filter prediction step
-                kf.predict()
-                # TODO: call the Extended Kalman Filter update step if new sensor data is available, for each GPS reading and for each landmark ping
-                kf.update()
+                # TODO: (done) call the Extended Kalman Filter prediction step
+                kf.predict(step)
+                # TODO: (done) call the Extended Kalman Filter update step if new sensor data is available, for each GPS reading and for each landmark ping
+                kf.update(step)
 
             # TODO: retrieve the next motor command from the input file
             
@@ -84,7 +84,7 @@ if __name__ == "__main__":
     # at the end, write the histories into output files
     with open(output_ground_truth_filepath, "w") as gt_data:
         # TODO: write ground_truth_history to a file
-        pass
+        gt_data.write()
     with open(output_sensor_data_filepath, "w") as sensor_data:
         # TODO: write sensor_data_history to a file
         pass

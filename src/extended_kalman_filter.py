@@ -12,7 +12,7 @@ import numpy as np
 from numpy import cos, sin, ndarray
 import sympy
 from sympy.abc import x, y, v, w, R, theta
-from sympy import Matrix, Symbol, Identity, Inverse, matrix2numpy, jacobian
+from sympy import Matrix, Symbol, Identity, Inverse, matrix2numpy
 import random
 
 from utils import wrap_angle
@@ -75,13 +75,16 @@ class ExtendedKalmanFilter:
 
     def predict(self, u: np.ndarray):
         """
-        Predicts the next state vector and its covariance matrix using the state transition matrix and an input control vector. The Kalman Filter uses the following predict equations:
+        Predicts the next state vector and its covariance matrix
+        using the state transition matrix and an input control vector.
+        The Kalman Filter uses the following predict equations:
 
         x_t+1 = f(x,u)
         P_t+1 = F * P * F.T + Q
 
         where F is the Jacobian of f(x,u)
 
+        
         Args:
             u: the input control vector
         """
@@ -115,22 +118,34 @@ class ExtendedKalmanFilter:
         y: np.ndarray | None,
     ):
         """
-        Updates the current state prediction using observations from the environment. The Extended Kalman Filter uses the following update equations:
+        Updates the current state prediction using observations
+        from the environment. The Extended Kalman Filter uses the
+        following update equations:
 
         x = x + K * y
         P = P - K * H * P
 
         Where K and y are given by the following:
-        y = z - h(x) (residual: error between observation and expected observation given estimated state vector)
-        K = P * H.T * inv(S) (Kalman Gain: portion of total uncertainty that is from the prediction)
-        S = H * P * H.T + R (total uncertainty in the system)
+        
+        y = z - h(x)
+        (residual: error between observation
+        and expected observation given estimated state vector)
+        
+        K = P * H.T * inv(S)
+        (Kalman Gain: portion of total uncertainty
+        that is from the prediction)
+        
+        S = H * P * H.T + R
+        (total uncertainty in the system)
 
         where H is the Jacobian of h(x)
 
         Args:
-            H: the Jacobian of the nonlinear measurement model, which relates the state space to the measurement space
+            H: the Jacobian of the nonlinear measurement model,
+            which relates the state space to the measurement space
             R: the measurement noise model (covariance)
-            y: the residual, which is the error between the measured observation and the observation expected by the predicted state
+            y: the residual, which is the error between the measured observation
+            and the observation expected by the predicted state
         """
         # TODO: (done) calculate the total uncertainty in the system
         S = H * self.P * H.T + R

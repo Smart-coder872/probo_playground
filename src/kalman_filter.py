@@ -1,5 +1,7 @@
 """
-Kalman Filter implementation for the simulator. Assumes linear system dynamics and Gaussian noise. For the simulator, we are tracking the following states:
+Kalman Filter implementation for the simulator.
+Assumes linear system dynamics and Gaussian noise.
+For the simulator, we are tracking the following states:
 
 x = [x, y, theta]
 
@@ -10,20 +12,22 @@ u = [v_x, v_y, w]
 
 import numpy as np
 import random
-import sympy
 from numpy import ndarray
 from sympy import Identity, Inverse, matrix2numpy
 
 class KalmanFilter:
     """
-    A class that implements the basic Kalman Filter algorithm, which assumes linear system dynamics and Gaussian noise.
+    A class that implements the basic Kalman Filter algorithm,
+    which assumes linear system dynamics and Gaussian noise.
 
     Attributes:
         dt: the length of each timestep, in seconds
         x: the state vector for the system we are estimating
         P: the process model, describing the uncertainty in our estimate
-        F: the state transition matrix, describing how our state naturally changes from timestep to timestep
-        B: the control input model, describing how control inputs affect each state variable in the state vector
+        F: the state transition matrix,
+        describing how our state naturally changes from timestep to timestep
+        B: the control input model,
+        describing how control inputs affect each state variable in the state vector
         Q: the process noise, modeling unexpected disturbance in state transitions
     """
 
@@ -63,7 +67,9 @@ class KalmanFilter:
 
     def predict(self, u: ndarray):
         """
-        Predicts the next state vector and its covariance matrix using the state transition matrix and an input control vector. The Kalman Filter uses the following predict equations:
+        Predicts the next state vector and its covariance matrix
+        using the state transition matrix and an input control vector.
+        The Kalman Filter uses the following predict equations:
 
         x_t+1 = F * x_t + B * u_t
         P_t+1 = F * P * F.T + Q
@@ -81,15 +87,20 @@ class KalmanFilter:
 
     def update(self, z, H: ndarray, R):
         """
-        Updates the current state prediction using observations from the environment. The Kalman Filter uses the following update equations:
+        Updates the current state prediction using observations from the environment.
+        The Kalman Filter uses the following update equations:
 
         x = x + K * y
         P = P - K * H * P
 
         Where K and y are given by the following:
-        y = z - H * x (residual: error between observation and expected observation given estimated state vector)
-        K = P * H.T * inv(S) (Kalman Gain: portion of total uncertainty that is from the prediction)
-        S = H * P * H.T + R (total uncertainty in the system)
+        
+        y = z - H * x
+        (residual: error between observation and expected observation given estimated state vector)
+        K = P * H.T * inv(S)
+        (Kalman Gain: portion of total uncertainty that is from the prediction)
+        S = H * P * H.T + R
+        (total uncertainty in the system)
 
         Args:
             z: the given observation, AKA a measurement taken of the environment

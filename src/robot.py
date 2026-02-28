@@ -5,7 +5,7 @@ The Robot class models the robotic agent that explores the world. The robot is r
 """
 
 from environment import Environment
-from sensors import SensorInterface
+from sensors import SensorInterface, WheelEncoder, LandmarkPinger, GPS
 from numpy import cos, sin
 from pandas import DataFrame
 
@@ -29,9 +29,9 @@ class Robot:
         # TODO: (done) set the environment property to the parameter value
         self.env = env
         # TODO: initialize the sensors property as an empty list
-        self.sensors = [SensorInterface.WheelEncoder, 
-                        SensorInterface.LandmarkPinger,
-                        SensorInterface.GPS
+        self.sensors = [WheelEncoder, 
+                        LandmarkPinger,
+                        GPS
                         ]
 
     def robot_step_differential(self, lin_vel: float, ang_vel: float):
