@@ -7,6 +7,7 @@ from robot import Robot
 from kalman_filter import KalmanFilter
 from extended_kalman_filter import ExtendedKalmanFilter
 from utils import Position, Pose, Landmark, Bounds
+import pandas as pd
 
 if __name__ == "__main__":
     # set up the environment
@@ -60,10 +61,10 @@ if __name__ == "__main__":
     kalman_filter_history = []
 
     # set up input filepath and output filepaths
-    input_commands_filepath = ""
-    output_ground_truth_filepath = ""
-    output_sensor_data_filepath = ""
-    output_kalman_filter_filepath = ""
+    input_commands_filepath = "./input/motor_commands.csv"
+    output_ground_truth_filepath = "./output/ground_truth.csv"
+    output_sensor_data_filepath = "./output/sensor_data.csv"
+    output_kalman_filter_filepath = "./output/kalman_filter.csv"
 
     # open up the instructions, pop the first
     with open(input_commands_filepath, "r") as cmd:
@@ -91,7 +92,7 @@ if __name__ == "__main__":
     # at the end, write the histories into output files
     with open(output_ground_truth_filepath, "w") as gt_data:
         # TODO: write ground_truth_history to a file
-        gt_data.write(ground_truth_history)
+        pd.to_csv(ground_truth_history)
     with open(output_sensor_data_filepath, "w") as sensor_data:
         # TODO: write sensor_data_history to a file
         sensor_data.write(sensor_data_history)

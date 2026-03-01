@@ -1,7 +1,12 @@
 """
-This file contains several useful custom datatypes for you to use at your convenience! Generally, they provide structure for data that is commonly grouped together anyway (such as x and y coordinates, rectangle dimensions, and sensor measurements).
+This file contains several useful custom datatypes
+for you to use at your convenience! Generally,
+they provide structure for data that is commonly
+grouped together anyway (such as x and y coordinates,
+rectangle dimensions, and sensor measurements).
 
-There is nothing you need to edit or fill in within this file, but feel free to alter the existing datatypes and add more as you see fit!
+There is nothing you need to edit or fill in within this file,
+but feel free to alter the existing datatypes and add more as you see fit!
 """
 
 from dataclasses import dataclass
