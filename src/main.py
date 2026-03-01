@@ -11,18 +11,25 @@ from utils import Position, Pose, Landmark, Bounds
 if __name__ == "__main__":
     # set up the environment
     # TODO: choose values for each input parameter, using the expected datatype
-    dimensions = 50             #vertical length or horizontal length
-    dt = 1                      #1 step per seconds
-    obstacles = []              #
-    landmarks = []              #
-    initial_robot_pose = None   #
+    dimensions = 10             #vertical length or horizontal length in meters
+    dt = 0.1                    #0.1 seconds per step
+    obstacles = [
+        [5, 7, 5, 7]            # x_min, x_max, y_min, y_max
+        [0, 4, 6, 8]]           # additional obstacle
+    
+    landmarks = [
+          [2.0, 2.0]            # x, y
+          [5.0, 5.0]
+          [8.0, 8.0]
+    ]              
+    robot_starting_pose = Pose(pos = (0.0, 0.0), theta = 0.6)  #x, y and theta
 
     env = Environment(
         dimensions,
         dt,
         obstacles,
         landmarks,
-        initial_robot_pose,
+        robot_starting_pose,
     )
 
     # set up the robot
@@ -33,18 +40,18 @@ if __name__ == "__main__":
     if LINEAR:
         kf = KalmanFilter(
             dt,
-            initial_robot_pose,
+            robot_starting_pose,
         )
     else:
         # set up the Extended Kalman Filter
         kf = ExtendedKalmanFilter(
             dt,
-            initial_robot_pose,
+            robot_starting_pose,
         )
 
     # set up timekeeping
     # TODO: (done) set the total_seconds variable to however long you want the simulator to run (not real-time!)
-    total_seconds = 10                          #total run time
+    total_seconds = 30                          #total run time
     total_timesteps = total_seconds / env.DT    #calculate time step
 
     # set up logging
@@ -63,19 +70,19 @@ if __name__ == "__main__":
         # iterate through each timestep
         for step in range(int(total_timesteps) + 1):
             # TODO: (done) take a ground truth snapshot and add it to the history
-            env.take_state_snapshot(step)
+            env.take_state_snapshot()
             # TODO: (done) take sensor measurements and add it to the history
-            robot.take_sensor_measurements(step)
+            robot.take_sensor_measurements()
             if LINEAR:
                 # TODO: (done) call the Kalman Filter prediction step
-                kf.predict(step)
+                kf.predict()
                 # TODO: (done) call the Kalman Filter update step if new sensor data is available
-                kf.update(step)
+                kf.update()
             else:
                 # TODO: (done) call the Extended Kalman Filter prediction step
-                kf.predict(step)
+                kf.predict()
                 # TODO: (done) call the Extended Kalman Filter update step if new sensor data is available, for each GPS reading and for each landmark ping
-                kf.update(step)
+                kf.update()
 
             # TODO: retrieve the next motor command from the input file
             
@@ -84,7 +91,9 @@ if __name__ == "__main__":
     # at the end, write the histories into output files
     with open(output_ground_truth_filepath, "w") as gt_data:
         # TODO: write ground_truth_history to a file
-        gt_data.write()
+        gt_data.write(ground_truth_history)
     with open(output_sensor_data_filepath, "w") as sensor_data:
         # TODO: write sensor_data_history to a file
-        pass
+        sensor_data.write(sensor_data_history)
+    with open(output_kalman_filter_filepath, "w") as kalman_data:
+        kalman_data.write(kalman_filter_history)

@@ -1,7 +1,10 @@
 """
 A simulated robotic agent with teleoperation and sensing capabilities.
 
-The Robot class models the robotic agent that explores the world. The robot is remote-controlled by angular and linear velocity commands read from an external file. The robot can execute motor commands to move, and can sense both externally (GPS, landmarks, obstacles) and internally (odometry, IMU).
+The Robot class models the robotic agent that explores the world.
+The robot is remote-controlled by angular and linear velocity commands
+read from an external file. The robot can execute motor commands to move,
+and can sense both externally (GPS, landmarks, obstacles) and internally (odometry, IMU).
 """
 
 from environment import Environment
@@ -28,15 +31,16 @@ class Robot:
         """
         # TODO: (done) set the environment property to the parameter value
         self.env = env
-        # TODO: initialize the sensors property as an empty list
-        self.sensors = [WheelEncoder, 
-                        LandmarkPinger,
-                        GPS
+        # TODO: (done)initialize the sensors property as an empty list
+        self.sensors = [WheelEncoder.sample, 
+                        LandmarkPinger.sample,
+                        GPS.sample
                         ]
 
     def robot_step_differential(self, lin_vel: float, ang_vel: float):
         """
-        Differential-drive mode. Given forward linear and angular velocities, determine the robot's change in x, y, and heading and apply those changes in the environment.
+        Differential-drive mode. Given forward linear and angular velocities,
+        determine the robot's change in x, y, and heading and apply those changes in the environment.
 
         Args:
             lin_vel: input linear velocity command
@@ -56,21 +60,20 @@ class Robot:
         dtheta = ang_vel * self.env.robot_pose.theta                #converts angular velocity input to dtheta
 
 
-        return self.env.is_valid_motion(dx, dy, dtheta)
+        self.env.is_valid_motion(dx, dy, dtheta)
 
-    def robot_step_translational(self, x_vel: float, y_vel: float, ang_vel: float):
+    def robot_step_translational(self, x_vel: float, y_vel: float):
         """
-        Swerve-drive mode. Given x, y, and angular velocities, determine the robot's change in x, y, and heading and apply those changes in the environment.
+        Swerve-drive mode. Given x and y velocities,
+        determine the robot's change in x, y, and apply those changes in the environment.
 
         Args:
             x_vel: input x velocity command
             y_vel: input y velocity command
-            ang_vel: input angular velocity command
 
         Returns:
             dx: change in x position
             dy: change in y position
-            d-theta: change in heading
         """
         # TODO: (done) fill in the function
         self.X_vel = x_vel
@@ -78,9 +81,8 @@ class Robot:
         
         dx = x_vel * self.env.DT
         dy = y_vel * self.env.DT
-        dtheta = ang_vel * self.env.DT
 
-        return self.env.is_valid_motion(dx, dy, dtheta)
+        self.env.is_valid_motion(dx, dy, 0.0)
 
     def take_sensor_measurements(self):
         """
@@ -88,9 +90,9 @@ class Robot:
         """
         # TODO: fill in the function
         sensor_measurements = DataFrame(
-            {"Wheel Encoder": [self.sensors[0].sample(self)],
-             "LandmarkPinger": [self.sensors[1].sample(self)],
-             "GPS": [self.sensors[2].sample(self)]
+            {"Wheel Encoder": [self.sensors[0]],
+             "LandmarkPinger": [self.sensors[1]],
+             "GPS": [self.sensors[2]]
             }
         )
         return sensor_measurements

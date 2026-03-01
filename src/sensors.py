@@ -1,11 +1,21 @@
 """
-An abstract base class that all sensor classes must inherit from. This structure guarantees that all sensors have certain traits, including a name, sampling interval, and sampling function.
+An abstract base class that all sensor classes must inherit from.
+This structure guarantees that all sensors have certain traits,
+including a name, sampling interval, and sampling function.
 
-In addition to basic features, all sensors should have noise constants. Different sensors may use different distributions to model noise, and may take in different parameters to shape that noise. For example, one sensor might have a constant noise mean, while another might have noise that grows proportionally with distance or time.
+In addition to basic features, all sensors should have noise constants.
+Different sensors may use different distributions to model noise,
+and may take in different parameters to shape that noise.
+For example, one sensor might have a constant noise mean,
+while another might have noise that grows proportionally with distance or time.
 
-Exteroceptive sensors measure the robot's relationship to the world. This includes GPS, cameras, LiDAR, and anything else that takes a measurement that can relate the robot's state to things beyond the robot.
+Exteroceptive sensors measure the robot's relationship to the world.
+This includes GPS, cameras, LiDAR, and anything else that takes a measurement
+that can relate the robot's state to things beyond the robot.
 
-Proprioceptive sensors measure the robot's relationship to its past states. This includes IMUs, wheel encoders, and anything else that measures how the robot's state is relatively changing, without relating the robot to the world.
+Proprioceptive sensors measure the robot's relationship to its past states.
+This includes IMUs, wheel encoders, and anything else that measures
+how the robot's state is relatively changing, without relating the robot to the world.
 """
 
 from abc import ABC, abstractmethod
@@ -14,8 +24,7 @@ from math import pi
 import numpy as np
 
 from sympy.abc import x, y, k, j, theta
-from sympy import symbols, Matrix, Symbol, pprint
-from environment import Environment
+from sympy import symbols, Matrix, Symbol, pprint, matrix2numpy
 from random import gauss
 
 
@@ -139,7 +148,9 @@ class WheelEncoder(SensorInterface):
         )
 class LandmarkPinger(SensorInterface):
     """
-    This class represents a sensor that measures the range and bearing between the robot and the floating-point landmarks on the map. In practice, this sensor could be a ToF sensor, a node in a network of beacons, or even a camera.
+    This class represents a sensor that measures the range and bearing
+    between the robot and the floating-point landmarks on the map.
+    In practice, this sensor could be a ToF sensor, a node in a network of beacons, or even a camera.
 
     Attributes:
         name: reference identifier
@@ -179,8 +190,8 @@ class LandmarkPinger(SensorInterface):
         # TODO: (done) define the nonlinear measurement model symbolically
         self.h_x: Matrix = Matrix(
             [
-                [Environment.self.RANGE],  # calculation of r (range)
-                [Environment.self.BEARING]  # calculation of phi (bearing)
+                [self.env.RANGE],  # calculation of r (range)
+                [self.env.BEARING]  # calculation of phi (bearing)
             ]
         )
 
@@ -201,8 +212,8 @@ class LandmarkPinger(SensorInterface):
         Reports noisy measurements of the bearing and range between the robot and all nearby landmarks.
         """
         # TODO: (done) fill in the function
-        noisy_range = gauss(Environment.self.RANGE, self.RANGE_NOISE + Environment.self.RANGE * self.RANGE_PROP_NOISE)
-        noisy_bearing = gauss(Environment.self.BEARING, self.BEARING_NOISE + Environment.self.BEARING)
+        noisy_range = gauss(self.env.RANGE, self.RANGE_NOISE + self.env.RANGE * self.RANGE_PROP_NOISE)
+        noisy_bearing = gauss(self.env.BEARING, self.BEARING_NOISE + self.env.BEARING)
 
         print("Range w/ noise" + noisy_range +
               "Bearing w/ noise" + noisy_bearing)
@@ -223,7 +234,9 @@ class LandmarkPinger(SensorInterface):
 
     def H_eval(self, x, lm_id):
         """
-        Evaluate the Jacobian of h(x) at x, which reshapes a state vector to be in the observation space. This matrix is used to turn a state prediction into an observation prediction for a specific landmark.
+        Evaluate the Jacobian of h(x) at x, which reshapes a state vector
+        to be in the observation space. This matrix is used to turn a state prediction
+        into an observation prediction for a specific landmark.
 
         Args:
             x: the current state vector, to linearize with respect to
@@ -233,10 +246,10 @@ class LandmarkPinger(SensorInterface):
         lm_x = None
         lm_y = None
 
-        # TODO: set the value of each symbolic substitution to the actual numerical value that was passed in
-        self.subs[x] = None
-        self.subs[y] = None
-        self.subs[theta] = None
+        # TODO: (done) set the value of each symbolic substitution to the actual numerical value that was passed in
+        self.subs[x] = x[0]
+        self.subs[y] = x[1]
+        self.subs[theta] = x[2]
         self.subs[j] = lm_x  # note: we use j for landmark x position
         self.subs[k] = lm_y  # note: we use k for landmark y position
 
@@ -248,21 +261,22 @@ class LandmarkPinger(SensorInterface):
 
     def y(self, z, x, lm_id):
         """
-        Calculate the residual between an observation x and a predicted observation derived from a predicted state. The predicted observation is in reference to a specified landmark.
+        Calculate the residual between an observation x and a predicted observation
+        derived from a predicted state. The predicted observation is in reference to a specified landmark.
         """
         # TODO: find the x and y position of the given landmark
         lm_x = self.LANDMARKS.pos.x
         lm_y = self.LANDMARKS.pos.y
 
         # TODO: set the value of each symbolic substitution to the actual numerical value that was passed in
-        self.subs[x] = None
-        self.subs[y] = None
-        self.subs[theta] = None
+        self.subs[x] = x[0]
+        self.subs[y] = x[1]
+        self.subs[theta] = x[2]
         self.subs[j] = lm_x  # note: we use j for landmark x position
         self.subs[k] = lm_y  # note: we use k for landmark y position
 
         # TODO: evaluate the measurement model at the subs values and convert it to a numpy array
-        hx_eval = None
+        hx_eval = matrix2numpy(self.H.subs(self.subs))
 
         # TODO: calculate the residual
         y = z - hx_eval * x
@@ -309,8 +323,8 @@ class GPS(SensorInterface):
         # TODO: fill in the measurement model
         self.H = None
 
-        # TODO: fill in the noise model
-        self.R = None
+        # TODO: (done) fill in the noise model
+        self.R = np.diag(x_noise, y_noise)
 
     def sample(self):
         """
