@@ -76,23 +76,39 @@ if __name__ == "__main__":
             robot.take_sensor_measurements()
             if LINEAR:
                 # TODO: (done) call the Kalman Filter prediction step
-                kf.predict()
+                kf.predict(robot.take_sensor_measurements())
                 # TODO: (done) call the Kalman Filter update step if new sensor data is available
                 kf.update()
             else:
                 # TODO: (done) call the Extended Kalman Filter prediction step
-                kf.predict()
+                kf.predict(robot.take_sensor_measurements())
                 # TODO: (done) call the Extended Kalman Filter update step if new sensor data is available, for each GPS reading and for each landmark ping
                 kf.update()
 
             # TODO: retrieve the next motor command from the input file
-            
+            for data_point in input_commands_filepath:
+                if env.time < 5:
+                    linear_input = data_point[1]
+                    angular_input = data_point[2]
+                
+                elif env.time >= 6 and env.time < 8:
+                    linear_input = data_point[4]
+                    angular_input = data_point[5]
+
+                elif env.time >= 8 and env.time < 15:
+                    linear_input = data_point[7]
+                    angular_input = data_point[8]
+                else:
+                    linear_input = data_point[10]
+                    angular_input = data_point[11]
+
+
             # TODO: execute the motor command
-            pass
+            robot.robot_step_differential(linear_input, angular_input)
     # at the end, write the histories into output files
     with open(output_ground_truth_filepath, "w") as gt_data:
         # TODO: write ground_truth_history to a file
-        pd.to_csv(ground_truth_history)
+        gt_data.write(ground_truth_history)
     with open(output_sensor_data_filepath, "w") as sensor_data:
         # TODO: write sensor_data_history to a file
         sensor_data.write(sensor_data_history)
