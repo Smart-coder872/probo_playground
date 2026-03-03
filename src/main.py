@@ -15,22 +15,23 @@ if __name__ == "__main__":
     dimensions = 10             #vertical length or horizontal length in meters
     dt = 0.1                    #0.1 seconds per step
     obstacles = [
-        [5, 7, 5, 7]            # x_min, x_max, y_min, y_max
+        [5, 7, 5, 7],            # x_min, x_max, y_min, y_max
         [0, 4, 6, 8]]           # additional obstacle
     
     landmarks = [
-          [2.0, 2.0]            # x, y
-          [5.0, 5.0]
+          [2.0, 2.0],            # x, y
+          [5.0, 5.0],
           [8.0, 8.0]
     ]              
     robot_starting_pose = Pose(pos = (0.0, 0.0), theta = 0.6)  #x, y and theta
-
+    bearing = robot_starting_pose.theta
     env = Environment(
         dimensions,
         dt,
         obstacles,
         landmarks,
         robot_starting_pose,
+        bearing
     )
 
     # set up the robot
@@ -40,7 +41,7 @@ if __name__ == "__main__":
     LINEAR = True
     if LINEAR:
         kf = KalmanFilter(
-            dt,
+            float(dt),
             robot_starting_pose,
         )
     else:
@@ -71,9 +72,9 @@ if __name__ == "__main__":
         # iterate through each timestep
         for step in range(int(total_timesteps) + 1):
             # TODO: (done) take a ground truth snapshot and add it to the history
-            env.take_state_snapshot()
+            ground_truth_history.append(env.take_state_snapshot())
             # TODO: (done) take sensor measurements and add it to the history
-            robot.take_sensor_measurements()
+            sensor_data_history.append(robot.take_sensor_measurements())
             if LINEAR:
                 # TODO: (done) call the Kalman Filter prediction step
                 kf.predict(robot.take_sensor_measurements())
@@ -90,6 +91,7 @@ if __name__ == "__main__":
                 if env.time < 5:
                     linear_input = data_point[1]
                     angular_input = data_point[2]
+
                 
                 elif env.time >= 6 and env.time < 8:
                     linear_input = data_point[4]

@@ -44,7 +44,7 @@ class ExtendedKalmanFilter:
         self.x:np.ndarray = prior
 
         # TODO: (done) set the process model to an identity matrix
-        self.P = matrix2numpy(Identity(len(prior)))
+        self.P = np.eye(3)
 
         # TODO: (done) define the nonlinear state transition model
         self.f_xu: Matrix = Matrix(
@@ -89,9 +89,9 @@ class ExtendedKalmanFilter:
             u: the input control vector
         """
         # TODO: (done) set the value of each symbolic substitution to the actual numerical value being tracked by the EKF
-        self.subs[x] = self.x[0]
-        self.subs[y] = self.x[1]
-        self.subs[theta] = self.x[2]
+        self.subs[x] = self.x_state_ef[0]
+        self.subs[y] = self.x_state_ef[1]
+        self.subs[theta] = self.x_state_ef[2]
         self.subs[v] = u[0]
         self.subs[w] = u[1]
 
@@ -102,13 +102,13 @@ class ExtendedKalmanFilter:
         F_eval = matrix2numpy(self.F.subs(fxu_eval))
 
         # TODO: (done) calculate the next state prediction
-        self.x = F_eval*self.x + self.B*u
+        self.x_state_ef = F_eval*self.x_state_ef + self.B*u
 
         # TODO: (done) calculate the next covariance prediction
         self.P = F_eval*self.P*F_eval.T + self.get_Q()
 
         # return state vector and state covariance
-        return self.x_state, self.P
+        return self.x_state_ef, self.P
 
     def update(
         self,
@@ -154,16 +154,16 @@ class ExtendedKalmanFilter:
         K = self.P * H.T * matrix2numpy(Inverse(S))
 
         if y is None:
-            y = z - H @ self.x_state
+            y = z - H @ self.x_state_ef
 
         # TODO: (done) update state vector
-        self.x_state += K * y
+        self.x_state_ef += K * y
 
         # TODO: (done) update process model
         self.P -= K * H.T * self.P
 
         # return state vector and process model
-        return self.x_state, self.P
+        return self.x_state_ef, self.P
 
     def get_Q(self):
         """

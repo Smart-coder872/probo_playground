@@ -143,9 +143,8 @@ class WheelEncoder(SensorInterface):
         lin_sample = gauss(actual_lin_vel, self.LIN_NOISE + abs(actual_lin_vel) * self.LIN_NOISE_RATIO)
         ang_sample = gauss(actual_ang_vel, self.ANG_NOISE + abs(actual_ang_vel) * self.ANG_NOISE_RATIO)
 
-        print("Linear Velocity Sample:" + lin_sample +
-              "Angular Velocity Sample:" + ang_sample
-        )
+        return lin_sample, ang_sample
+        
 class LandmarkPinger(SensorInterface):
     """
     This class represents a sensor that measures the range and bearing
@@ -243,8 +242,8 @@ class LandmarkPinger(SensorInterface):
             lm_id: the ID of the landmark that we are predicting an observation of
         """
         # TODO: find the x and y position of the given landmark
-        lm_x = None
-        lm_y = None
+        lm_x = self.LANDMARKS.pos.x
+        lm_y = self.LANDMARKS.pos.y
 
         # TODO: (done) set the value of each symbolic substitution to the actual numerical value that was passed in
         self.subs[x] = x[0]

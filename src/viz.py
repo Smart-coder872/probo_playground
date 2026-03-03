@@ -20,7 +20,7 @@ class Visualizer:
         """
         Initialize the visualizer class.
         """
-        self.output_path = output_path
+        self.output_path = "./output"
         gt_log_path = output_path / "groundtruth_log.pkl"
         sensor_log_path = output_path / "sensor_log.pkl"
         env_info_path = output_path / "env_info.pkl"
@@ -116,16 +116,16 @@ class Visualizer:
         ax.legend(loc="upper right")
         return fig, ax
 
-    def poses_from_odom(self):
+    def poses_from_encoder(self):
         """
-        Given a DataFrame of odometry data with the following columns:
+        Given a DataFrame of wheel encoder data with the following columns:
         Time | Odometry_LinearVelocity | Odometry_AngularVelocity
         Output a DataFrame of estimated pose data with the following columns:
         Time | x | y | theta
         """
         # pop the first pose from GT
         prior = next(self.gt_log.itertuples())
-        pose: Pose = prior.RobotPose
+        pose: Pose = prior.robot_pose
         x = pose.pos.x
         y = pose.pos.y
         theta = pose.theta
@@ -163,7 +163,7 @@ class Visualizer:
         poses = []
 
         for row in self.gt_log.itertuples():
-            pose: Pose = row.RobotPose
+            pose: Pose = row.robot_pose
             x = pose.pos.x
             y = pose.pos.y
             theta = pose.theta
@@ -302,7 +302,7 @@ class Visualizer:
         )
         self.plot_single_trajectory(
             "Dead Reckoning",
-            self.poses_from_odom(),
+            self.poses_from_encoder(),
             "red",
         )
         self.plot_single_trajectory(
@@ -332,7 +332,7 @@ class Visualizer:
         """
         # Get all trajectory data
         gt_poses = self.poses_from_gt()
-        odom_poses = self.poses_from_odom()
+        odom_poses = self.poses_from_encoder()
         gps_poses = self.poses_from_gps()
 
         # Find the maximum number of frames needed

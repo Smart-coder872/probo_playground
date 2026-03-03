@@ -12,7 +12,7 @@ u = [v_x, v_y, w]
 
 import numpy as np
 import random
-from numpy import ndarray
+from numpy import ndarray, asarray
 from sympy import Identity, Inverse, matrix2numpy
 
 class KalmanFilter:
@@ -43,15 +43,15 @@ class KalmanFilter:
         self.DT: float = dt
 
         # TODO: (done) set the state vector to the given prior
-        self.x: ndarray = prior
+        self.x_state_kf: ndarray = prior
 
         # TODO: (done) set the process model to an identity matrix
-        self.P: ndarray = matrix2numpy(Identity(len(prior)))
+        self.P: ndarray = np.eye(3)
 
         # TODO: (done) define the motion model
-        self.F: ndarray = ndarray(
-            [1, self.DT],
-            [0, 1]
+        self.F = ndarray(
+            [float(1), self.DT],
+            [float(0), float(1)]
         )
 
         # TODO: (done) define the control model
@@ -78,12 +78,12 @@ class KalmanFilter:
             u: the input control vector
         """
         # TODO: (done) update the state vector using the state transition matrix and the given control input
-        self.x = self.F * self.x + self.B * u
+        self.x_state_kf = self.F * self.x_state_kf + self.B * u
 
         # TODO: (done) update the process model by propagating it through the state transition matrix and adding noise
         self.P = self.F * self.P * (self.F).T + self.Q
 
-        return self.x, self.P
+        return self.x_state_kf, self.P
 
     def update(self, z, H: ndarray, R):
         """
@@ -114,15 +114,15 @@ class KalmanFilter:
         K = self.P * H.T * matrix2numpy(Inverse(S))
 
         # TODO: (done) calculate the residual, AKA the error between the observation and what we expected the observation to be given our estimated state vector
-        y = z - H *self.x
+        y = z - H *self.x_state_kf
 
         # TODO: (done) update the state vector
-        self.x += K * y
+        self.x_state_kf += K * y
 
         # TODO: (done) update the process model
         self.P -= K * H * self.P
 
-        return self.x, self.P
+        return self.x_state_kf, self.P
 
     def get_Q(self):
         """
