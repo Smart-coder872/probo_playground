@@ -241,7 +241,7 @@ class LandmarkPinger(SensorInterface):
             lm_id: the ID of the landmark that we are predicting an observation of
         """
         # TODO: find the x and y position of the given landmark
-        if lm_id == i in self.robot.env.LANDMARKS.id:
+        if lm_id == self.robot.env.LANDMARKS.id:
                 lm_x = self.robot.env.LANDMARKS.pos[0]
                 lm_y = self.robot.env.LANDMARKS.pos[1]
 
@@ -264,8 +264,10 @@ class LandmarkPinger(SensorInterface):
         derived from a predicted state. The predicted observation is in reference to a specified landmark.
         """
         # TODO: find the x and y position of the given landmark
-        lm_x = self.LANDMARKS.pos[0]
-        lm_y = self.LANDMARKS.pos[1]
+        for lm in self.robot.env.LANDMARKS:
+            if lm.id == lm_id:
+                lm_x = self.robot.env.LANDMARKS.pos[0]
+                lm_y = self.robot.env.LANDMARKS.pos[1]
 
         # TODO: set the value of each symbolic substitution to the actual numerical value that was passed in
         self.subs[x] = x[0]

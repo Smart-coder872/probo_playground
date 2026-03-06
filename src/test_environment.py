@@ -9,8 +9,7 @@ from utils import Landmark
 from numpy import sqrt, atan2
 from pandas import DataFrame
 
-class TestEnv:
-    @pytest.fixture(autouse=True)
+class Test_Env:
     def __init__(self, test_landmarks):
         test_landmarks = [Landmark((4,3), 1),
                           Landmark((5,8), 2),
@@ -28,6 +27,7 @@ class TestEnv:
         # ...use lm_x, lm_y plus state x to build H or h(x,lm)...
         # for now, just return them:
         return lm_x, lm_y
+    
     def test_H_eval_landmark_2(self):
         result_x, result_y = self.t_H_eval(2)  # Now call the helper method
         assert result_x == 5
