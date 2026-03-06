@@ -22,6 +22,7 @@ from abc import ABC, abstractmethod
 from math import pi
 
 import numpy as np
+import pandas as pd
 
 from sympy.abc import x, y, k, j, theta
 from sympy import symbols, Matrix, Symbol, pprint, matrix2numpy
@@ -143,7 +144,12 @@ class WheelEncoder(SensorInterface):
         lin_sample = gauss(actual_lin_vel, self.LIN_NOISE + abs(actual_lin_vel) * self.LIN_NOISE_RATIO)
         ang_sample = gauss(actual_ang_vel, self.ANG_NOISE + abs(actual_ang_vel) * self.ANG_NOISE_RATIO)
 
-        return lin_sample, ang_sample
+        return pd.DataFrame(
+            {
+                f"{self.name}_LinearVelocity": [lin_sample],
+                f"{self.name}_AngularVelocity": [ang_sample],
+            }
+        )
         
 class LandmarkPinger(SensorInterface):
     """
@@ -187,10 +193,14 @@ class LandmarkPinger(SensorInterface):
         self.BEARING_NOISE = bearing_noise  # radians
 
         # TODO: (done) define the nonlinear measurement model symbolically
+        H_range, H_bearing = self.robot.env.get_proximity_to_landmarks()
+        self.RANGE = H_range
+        self.BEARING = H_bearing
+
         self.h_x: Matrix = Matrix(
             [
-                [self.env.RANGE],  # calculation of r (range)
-                [self.env.BEARING]  # calculation of phi (bearing)
+                [H_range],  # calculation of r (range)
+                [H_bearing]  # calculation of phi (bearing)
             ]
         )
 
@@ -205,17 +215,6 @@ class LandmarkPinger(SensorInterface):
             j: 0.0,
         }
 
-
-    def sample(self):
-        """
-        Reports noisy measurements of the bearing and range between the robot and all nearby landmarks.
-        """
-        # TODO: (done) fill in the function
-        noisy_range = gauss(self.env.RANGE, self.RANGE_NOISE + self.env.RANGE * self.RANGE_PROP_NOISE)
-        noisy_bearing = gauss(self.env.BEARING, self.BEARING_NOISE + self.env.BEARING)
-
-        print("Range w/ noise" + noisy_range +
-              "Bearing w/ noise" + noisy_bearing)
 
     def R(self, z):
         """
@@ -242,15 +241,16 @@ class LandmarkPinger(SensorInterface):
             lm_id: the ID of the landmark that we are predicting an observation of
         """
         # TODO: find the x and y position of the given landmark
-        lm_x = self.LANDMARKS.pos.x
-        lm_y = self.LANDMARKS.pos.y
+        if lm_id == i in self.robot.env.LANDMARKS.id:
+                lm_x = self.robot.env.LANDMARKS.pos[0]
+                lm_y = self.robot.env.LANDMARKS.pos[1]
 
         # TODO: (done) set the value of each symbolic substitution to the actual numerical value that was passed in
-        self.subs[x] = x[0]
-        self.subs[y] = x[1]
-        self.subs[theta] = x[2]
-        self.subs[j] = lm_x  # note: we use j for landmark x position
-        self.subs[k] = lm_y  # note: we use k for landmark y position
+                self.subs[x] = x[0]
+                self.subs[y] = x[1]
+                self.subs[theta] = x[2]
+                self.subs[j] = lm_x  # note: we use j for landmark x position
+                self.subs[k] = lm_y  # note: we use k for landmark y position
 
         # TODO: evaluate the Jacobian at the subs values and convert it to a numpy array
         H_eval = None
@@ -264,8 +264,8 @@ class LandmarkPinger(SensorInterface):
         derived from a predicted state. The predicted observation is in reference to a specified landmark.
         """
         # TODO: find the x and y position of the given landmark
-        lm_x = self.LANDMARKS.pos.x
-        lm_y = self.LANDMARKS.pos.y
+        lm_x = self.LANDMARKS.pos[0]
+        lm_y = self.LANDMARKS.pos[1]
 
         # TODO: set the value of each symbolic substitution to the actual numerical value that was passed in
         self.subs[x] = x[0]
@@ -282,7 +282,24 @@ class LandmarkPinger(SensorInterface):
 
         # return
         return y
+    
+    def sample(self):
+        """
+        Reports noisy measurements of the bearing and range between the robot and all nearby landmarks.
+        """
+        # TODO: (done) fill in the function
 
+        if self.RANGE <= self.MAX_RANGE:
+            noisy_range = gauss(self.RANGE, self.RANGE_NOISE + self.RANGE * self.RANGE_PROP_NOISE)
+            noisy_bearing = gauss(self.BEARING, self.BEARING_NOISE + self.BEARING)
+
+        
+        return pd.DataFrame(
+            {
+                f"{self.name}_Range w/Noise": [noisy_range],
+                f"{self.name}_Bearing w/Noise": [noisy_bearing],
+            }
+        )
 
 class GPS(SensorInterface):
     """

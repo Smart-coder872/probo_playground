@@ -66,9 +66,9 @@ class ExtendedKalmanFilter:
 
         # dictionary that maps Sympy symbols to numerical values. we will use these to substitute values into our symbolic matrices!
         self.subs: dict[Symbol, float] = {
-            x: self.x_state[0],
-            y: self.x_state[1],
-            theta: self.x_state[2],
+            x: self.x_state_ef[0],
+            y: self.x_state_ef[1],
+            theta: self.x_state_ef[2],
             v: 0,
             w: 0,
         }

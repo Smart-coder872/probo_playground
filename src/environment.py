@@ -155,20 +155,17 @@ class Environment:
         # TODO: (done) fill in the function
         landmark_proximities = []
 
-        for l in self.LANDMARKS:
-            x_range = l.pos.x - self.robot_pose.pos.x
-            y_range = l.pos.y - self.robot_pose.pos.y
+        for x, y in self.LANDMARKS:
+            x_range = x - self.robot_pose.pos[0]
+            y_range = y - self.robot_pose.pos[1]
             range = sqrt(x_range**2 + y_range**2)
+            
             total_angle = atan2(y_range, x_range)
+            bearing = total_angle - self.robot_pose.theta
             
-            self.RANGE = range
-            self.BEARING = total_angle - self.robot_pose.theta
-            
-            result = print("Robot true bearing to " + 
-                  l + "is " + self.BEARING + 
-                  "and robot true range is " + 
-                  self.RANGE) 
+            result = range, bearing 
             landmark_proximities.append(result)
+ 
         return landmark_proximities       
 
     def take_state_snapshot(self):
@@ -182,8 +179,8 @@ class Environment:
         snapshot = DataFrame(
             {"Time": [self.time],
              "Robot pos": [self.robot_pose],
-             "Range:": [self.RANGE],
-             "Bearing": [self.BEARING]}
+             "Range:": [self.get_proximity_to_landmarks()[0]],
+             "Bearing": [self.get_proximity_to_landmarks()[1]]}
         )
         return snapshot
     

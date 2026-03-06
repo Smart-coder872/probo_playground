@@ -23,7 +23,7 @@ if __name__ == "__main__":
           [5.0, 5.0],
           [8.0, 8.0]
     ]              
-    robot_starting_pose = Pose(pos = (0.0, 0.0), theta = 0.6)  #x, y and theta
+    robot_starting_pose = Pose((0.0, 0.0), 0.6)  #x, y and theta
     bearing = robot_starting_pose.theta
     env = Environment(
         dimensions,

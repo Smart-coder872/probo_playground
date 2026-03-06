@@ -13,6 +13,7 @@ u = [v_x, v_y, w]
 import numpy as np
 import random
 from numpy import ndarray, asarray
+import sympy as sp
 from sympy import Identity, Inverse, matrix2numpy
 
 class KalmanFilter:
@@ -49,16 +50,14 @@ class KalmanFilter:
         self.P: ndarray = np.eye(3)
 
         # TODO: (done) define the motion model
-        self.F = ndarray(
-            [float(1), self.DT],
-            [float(0), float(1)]
-        )
+        self.F: ndarray = np.eye(3)
 
         # TODO: (done) define the control model
-        self.B: ndarray = ndarray(
+        self.B = matrix2numpy(
+            sp.Matrix([
             [self.DT, 0, 0],
             [0, self.DT, 0],
-            [0, 0, self.DT]
+            [0, 0, self.DT]])
 
         )
 
@@ -78,7 +77,7 @@ class KalmanFilter:
             u: the input control vector
         """
         # TODO: (done) update the state vector using the state transition matrix and the given control input
-        self.x_state_kf = self.F * self.x_state_kf + self.B * u
+        self.x_state_kf = self.F @ self.x_state_kf + self.B * u
 
         # TODO: (done) update the process model by propagating it through the state transition matrix and adding noise
         self.P = self.F * self.P * (self.F).T + self.Q
