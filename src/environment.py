@@ -13,7 +13,7 @@ x position, y position, and heading.
 """
 
 from utils import Position, Pose, Bounds, Landmark, BearingRange, wrap_angle
-from numpy import sqrt, atan2
+from numpy import sqrt, arctan2
 from pandas import DataFrame
 
 class Environment:
@@ -160,7 +160,7 @@ class Environment:
             y_range = y - self.robot_pose.pos[1]
             range = sqrt(x_range**2 + y_range**2)
             
-            total_angle = atan2(y_range, x_range)
+            total_angle = arctan2(y_range, x_range)
             bearing = total_angle - self.robot_pose.theta
             
             result = range, bearing 
