@@ -20,12 +20,14 @@ class Visualizer:
         """
         Initialize the visualizer class.
         """
-        self.output_path = "./output"
-        gt_log_path = output_path / "groundtruth_log.pkl"
-        sensor_log_path = output_path / "sensor_log.pkl"
-        env_info_path = output_path / "env_info.pkl"
-        sensor_info_path = output_path / "sensor_info.pkl"
-        with open(sensor_log_path, "rb") as f:
+        self.output_path = "./output"                       #direct to output folder
+        #output folder files
+        gt_log_path = output_path / "groundtruth_log.pkl"   #groundtruth pickle file (a)
+        sensor_log_path = output_path / "sensor_log.pkl"    #sensor log pickle file  (b)
+        env_info_path = output_path / "env_info.pkl"        #enviornment info pickle file (c)
+        sensor_info_path = output_path / "sensor_info.pkl"  #sensor info pickle file (d)
+        
+        with open(sensor_log_path, "rb") as f:     
             self.sensor_log = pickle.load(f)
         with open(gt_log_path, "rb") as f:
             self.gt_log = pickle.load(f)
@@ -133,8 +135,8 @@ class Visualizer:
         dt = self.env_info["Timestep"]
 
         for row in self.sensor_log.itertuples():
-            v = row.Odometry_LinearVelocity
-            w = row.Odometry_AngularVelocity
+            v = row.WheelEncoder_LinearVelocity
+            w = row.WheelEncoder_AngularVelocity
 
             # Dead reckoning integration
             x += np.cos(theta) * v * dt

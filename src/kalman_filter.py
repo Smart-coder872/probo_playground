@@ -77,7 +77,7 @@ class KalmanFilter:
             u: the input control vector
         """
         # TODO: (done) update the state vector using the state transition matrix and the given control input
-        self.x_state_kf = self.F @ self.x_state_kf + self.B * u
+        self.x_state_kf = self.F @ self.x_state_kf + self.B @ u
 
         # TODO: (done) update the process model by propagating it through the state transition matrix and adding noise
         self.P = self.F * self.P * (self.F).T + self.Q
