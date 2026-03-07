@@ -107,8 +107,8 @@ class WheelEncoder(SensorInterface):
     def __init__(
         self,
         robot,
-        linear_noise_ratio,
-        angular_noise_ratio,
+        linear_noise_ratio=0.01,
+        angular_noise_ratio=0.01,
         name="wheel_encoder",
         interval=0.1,
         lin_noise=0.05,
@@ -319,10 +319,10 @@ class GPS(SensorInterface):
     def __init__(
         self,
         robot,
-        name,
-        interval,
-        x_noise,
-        y_noise,
+        name = "GPS",
+        interval = 2,
+        x_noise= 0.2,
+        y_noise = 0.2,
     ):
         """
         Initialize an instance of the GPS class.

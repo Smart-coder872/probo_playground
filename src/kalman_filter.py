@@ -80,7 +80,7 @@ class KalmanFilter:
         self.x_state_kf = self.F @ self.x_state_kf + self.B @ u
 
         # TODO: (done) update the process model by propagating it through the state transition matrix and adding noise
-        self.P = self.F * self.P * (self.F).T + self.Q
+        self.P = self.F @ self.P @ (self.F).T + self.Q
 
         return self.x_state_kf, self.P
 

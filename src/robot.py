@@ -22,7 +22,7 @@ class Robot:
         sensors: list of all robot sensors
     """
 
-    def __init__(self, env: Environment):
+    def __init__(self, env: Environment, sensor_info=dict):
         """
         Initialize an instance of the Robot class.
 
@@ -31,11 +31,25 @@ class Robot:
         """
         # TODO: (done) set the environment property to the parameter value
         self.env = env
+
+
         # TODO: (done)initialize the sensors property as an empty list
-        self.sensors = [WheelEncoder.sample, 
-                        LandmarkPinger.sample,
-                        GPS.sample
-                        ]
+        gps_info = sensor_info["GPS"]
+
+        self.sensors = dict[str, SensorInterface]= {
+            "GPS": GPS(
+                #initialize GPS class
+                robot=self
+            ),
+            "LandmarkPinger": LandmarkPinger(
+                #initialize Landmark Pinger class
+                robot=self
+            ),
+            "WheelEncoder": WheelEncoder(
+                #initialize WheelEncoder class
+                robot = self
+            )
+        }
 
     def robot_step_differential(self, lin_vel: float, ang_vel: float):
         """
@@ -90,7 +104,7 @@ class Robot:
         """
         # TODO: fill in the function
         sensor_measurements = DataFrame(
-            {"Wheel Encoder": [self.sensors[0]],
+            {"WheelEncoder": [self.sensors[0]],
              "LandmarkPinger": [self.sensors[1]],
              "GPS": [self.sensors[2]]
             }

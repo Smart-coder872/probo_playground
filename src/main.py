@@ -37,18 +37,23 @@ if __name__ == "__main__":
     # set up the robot
     robot = Robot(env)
 
-    # set up the (Extended) Kalman Filter
+   
+
+    # set up the (Extended) Kalman Filter if bool LINEAR is True
     LINEAR = True
     if LINEAR:
         kf = KalmanFilter(
             float(dt),
             robot_starting_pose,
         )
+        # kf.predict()
+        # kf.update()
     else:
         # set up the Extended Kalman Filter
         kf = ExtendedKalmanFilter(
             dt,
             robot_starting_pose,
+            
         )
 
     # set up timekeeping
@@ -67,6 +72,11 @@ if __name__ == "__main__":
     output_sensor_data_filepath = "./output/sensor_data.csv"
     output_kalman_filter_filepath = "./output/kalman_filter.csv"
 
+
+    measurement = robot.take_sensor_measurements()
+    encoder_measurement = measurement.WheelEncoder
+    print(encoder_measurement)
+
     # open up the instructions, pop the first
     with open(input_commands_filepath, "r") as cmd:
         # iterate through each timestep
@@ -76,7 +86,7 @@ if __name__ == "__main__":
             # TODO: (done) take sensor measurements and add it to the history
             sensor_data_history.append(robot.take_sensor_measurements())
             if LINEAR:
-                # TODO: (done) call the Kalman Filter prediction step
+                # TODO: (done) call the Kalman Filter prediction step            
                 kf.predict(robot.take_sensor_measurements())
                 # TODO: (done) call the Kalman Filter update step if new sensor data is available
                 kf.update()
