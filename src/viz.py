@@ -27,15 +27,15 @@ class Visualizer:
         env_info_path = output_path / "env_info.pkl"        #enviornment info pickle file (c)
         sensor_info_path = output_path / "sensor_info.pkl"  #sensor info pickle file (d)
         
-        with open(sensor_log_path, "rb") as f:     
-            self.sensor_log = pickle.load(f)
-        with open(gt_log_path, "rb") as f:
-            self.gt_log = pickle.load(f)
+        with open(sensor_log_path, "rb") as f:     #open and read (b)
+            self.sensor_log = pickle.load(f)       #store (b) as an obj "sensor log"
+        with open(gt_log_path, "rb") as f:         #open and read (a)
+            self.gt_log = pickle.load(f)           #store (a) as an obj "gt_log"
         # unpack into dataframes
-        with open(env_info_path, "rb") as f:
-            self.env_info = pickle.load(f)
-        with open(sensor_info_path, "rb") as f:
-            self.sensor_info = pickle.load(f)
+        with open(env_info_path, "rb") as f:       #open and read (c)
+            self.env_info = pickle.load(f)         #store c as an obj "env_info"
+        with open(sensor_info_path, "rb") as f:    #open and read (d)
+            self.sensor_info = pickle.load(f)      #store (d) as an obj "sensor_info"
 
     def plot_env(self):
         """
@@ -49,7 +49,7 @@ class Visualizer:
 
         # Set up the plot boundaries
         dims = self.env_info["Dimensions"]
-        ax.set_xlim(dims["x_min"] - 1, dims["x_max"] + 1)
+        ax.set_xlim(dims["x_min"] - 1, dims["x_max"] + 1, )
         ax.set_ylim(dims["y_min"] - 1, dims["y_max"] + 1)
         ax.set_aspect("equal")
         ax.grid(True, alpha=0.3)
