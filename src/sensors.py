@@ -342,7 +342,7 @@ class GPS(SensorInterface):
         self.H = None
 
         # TODO: (done) fill in the noise model
-        self.R = np.diag(x_noise, y_noise)
+        self.R = [[x_noise, 0], [0, y_noise]]
 
     def sample(self):
         """
