@@ -14,20 +14,20 @@ if __name__ == "__main__":
     # TODO: choose values for each input parameter, using the expected datatype
     dimensions = 10             #vertical length or horizontal length in meters
     dt = 0.1                    #0.1 seconds per step
-    obstacles = [
-]           # additional obstacle
+    obstacles = None
+    landmarks = None
+
+    robot_a_starting_pose = Pose((0.0, 0.0), 0.6)  #x, y and theta
+    robot_b_starting_pose = Pose((1.0, 0.0), 0.6)
     
-    landmarks = [
-    ] 
-                 
-    robot_starting_pose = Pose((0.0, 0.0), 0.6)  #x, y and theta
-    bearing = robot_starting_pose.theta
+    bearing = robot_a_starting_pose.theta, #[NEEDS CORRECTION]
     env = Environment(
         dimensions,
         dt,
         obstacles,
         landmarks,
-        robot_starting_pose,
+        robot_a_starting_pose,
+        robot_b_starting_pose,
         bearing
     )
 
@@ -38,37 +38,52 @@ if __name__ == "__main__":
    
 
     # set up the (Extended) Kalman Filter if bool LINEAR is True
-    LINEAR = True
-    if LINEAR:
-        kf = KalmanFilter(
+    if robot_a:      #[DOUBLE CHECK]
+        kf = ExtendedKalmanFilter(
             float(dt),
-            robot_starting_pose,
+            robot_a_starting_pose,
         )
         # kf.predict()
         # kf.update()
-    else:
-        # set up the Extended Kalman Filter
-        kf = ExtendedKalmanFilter(
-            dt,
-            robot_starting_pose,
-            
-        )
 
+        # ikf.predict()
+        # ikf.update()
+    elif robot_b:      #[DOUBLE CHECK]
+        kf = ExtendedKalmanFilter(
+            float(dt),
+            robot_b_starting_pose,
+        )
+        # kf.predict()
+        # kf.update()
+
+        # ikf.predict()
+        # ikf.update()
+    else:
+        f"Robot not recognized as a or b"
     # set up timekeeping
     # TODO: (done) set the total_seconds variable to however long you want the simulator to run (not real-time!)
     total_seconds = 30                          #total run time
     total_timesteps = total_seconds / env.DT    #calculate time step
 
     # set up logging
-    ground_truth_history = []
-    sensor_data_history = []
-    kalman_filter_history = []
+    a_ground_truth_history = []
+    a_sensor_data_history = []
+    a_kalman_filter_history = []
+
+    b_ground_truth_history = []
+    b_sensor_data_history = []
+    b_kalman_filter_history = []
 
     # set up input filepath and output filepaths
-    input_commands_filepath = "./input/motor_commands.csv"
-    output_ground_truth_filepath = "./output/ground_truth.csv"
-    output_sensor_data_filepath = "./output/sensor_data.csv"
-    output_kalman_filter_filepath = "./output/kalman_filter.csv"
+    a_input_commands_filepath = "./input/a_motor_commands.csv" #[NEED TO CREATE FILE]
+    a_output_ground_truth_filepath = "./output/ground_truth.csv"
+    a_output_sensor_data_filepath = "./output/sensor_data.csv"
+    a_output_kalman_filter_filepath = "./output/kalman_filter.csv"
+
+    b_input_commands_filepath = "./input/b_motor_commands.csv" #[NEED TO CREATE FILE]
+    b_output_ground_truth_filepath = "./output/ground_truth.csv"
+    b_output_sensor_data_filepath = "./output/sensor_data.csv"
+    b_output_kalman_filter_filepath = "./output/kalman_filter.csv"
 
 
     measurement = robot.take_sensor_measurements()
