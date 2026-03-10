@@ -43,21 +43,13 @@ if __name__ == "__main__":
             float(dt),
             robot_a_starting_pose,
         )
-        # kf.predict()
-        # kf.update()
 
-        # ikf.predict()
-        # ikf.update()
     elif robot_b:      #[DOUBLE CHECK]
         kf = ExtendedKalmanFilter(
             float(dt),
             robot_b_starting_pose,
         )
-        # kf.predict()
-        # kf.update()
 
-        # ikf.predict()
-        # ikf.update()
     else:
         f"Robot not recognized as a or b"
     # set up timekeeping
@@ -103,6 +95,9 @@ if __name__ == "__main__":
                 kf.predict(robot.take_sensor_measurements())
                 # TODO: (done) call the Kalman Filter update step if new sensor data is available
                 kf.update()
+                
+                # ikf.predict()
+                # ikf.update()
             else:
                 # TODO: (done) call the Extended Kalman Filter prediction step
                 kf.predict(robot.take_sensor_measurements())
