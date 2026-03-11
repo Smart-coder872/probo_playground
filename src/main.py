@@ -75,8 +75,7 @@ if __name__ == "__main__":
 
 
     measurement = robot.take_sensor_measurements()
-    encoder_measurement = measurement.WheelEncoder
-    print(encoder_measurement)
+    print(measurement)
 
     # open up the instructions, pop the first
     with open(input_commands_filepath, "r") as cmd:
