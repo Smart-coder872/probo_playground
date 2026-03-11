@@ -20,10 +20,12 @@ how the robot's state is relatively changing, without relating the robot to the 
 
 from abc import ABC, abstractmethod
 from math import pi
+from utils import BearingRange, Position
 
 import numpy as np
 import pandas as pd
 import sympy as sp
+import math
 
 from sympy.abc import x, y, k, j, theta
 from sympy import symbols, Matrix, Symbol, pprint, matrix2numpy
@@ -298,19 +300,21 @@ class LandmarkPinger(SensorInterface):
         Reports noisy measurements of the bearing and range between the robot and all nearby landmarks.
         """
         # TODO: (done) fill in the function
-
-        if self.RANGE <= self.MAX_RANGE:
-            noisy_range = gauss(self.RANGE, self.RANGE_NOISE + self.RANGE * self.RANGE_PROP_NOISE)
-            noisy_bearing = gauss(self.BEARING, self.BEARING_NOISE + self.BEARING)
-
-        
-        return pd.DataFrame(
-            {
-                f"{self.name}_Range w/Noise": [noisy_range],
-                f"{self.name}_Bearing w/Noise": [noisy_bearing],
-            }
-        )
-
+        noisy_landmark_measurements: pd.DataFrame()
+        ground_truth_landmark_dists: pd.DataFrame = self.robot.env.get_proximity_to_landmarks()
+        for lm in ground_truth_landmark_dists.columns:
+            ground_truth: BearingRange = gt_ldmk_dists[lm].values[0]
+            if ground_truth.range <= self.MAX_RANGE:
+                noisy_range = gauss(self.RANGE, self.RANGE_NOISE + self.RANGE * self.RANGE_PROP_NOISE)
+                noisy_bearing = gauss(self.BEARING, self.BEARING_NOISE + self.BEARING)
+                bearing_range_noisy = BearingRange(
+                    noisy_bearing, noisy_range
+                )
+            else:
+                bearing_range_noisy = BearingRange(math.inf, math.inf)
+            noisy_landmark_measurements[f"{self.name}_{lm}"] = [bearing_range_noisy]
+        return noisy_landmark_measurements
+           
 class GPS(SensorInterface):
     """
     This class represents a GPS sensor that measures the position of the robot in 2D space.
