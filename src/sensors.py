@@ -300,10 +300,10 @@ class LandmarkPinger(SensorInterface):
         Reports noisy measurements of the bearing and range between the robot and all nearby landmarks.
         """
         # TODO: (done) fill in the function
-        noisy_landmark_measurements: pd.DataFrame()
+        noisy_landmark_measurements: pd.DataFrame
         ground_truth_landmark_dists: pd.DataFrame = self.robot.env.get_proximity_to_landmarks()
         for lm in ground_truth_landmark_dists.columns:
-            ground_truth: BearingRange = gt_ldmk_dists[lm].values[0]
+            ground_truth: BearingRange = ground_truth_landmark_dists[lm].values[0]
             if ground_truth.range <= self.MAX_RANGE:
                 noisy_range = gauss(self.RANGE, self.RANGE_NOISE + self.RANGE * self.RANGE_PROP_NOISE)
                 noisy_bearing = gauss(self.BEARING, self.BEARING_NOISE + self.BEARING)
