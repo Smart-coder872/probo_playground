@@ -7,6 +7,7 @@ from robot import Robot
 from kalman_filter import KalmanFilter
 from extended_kalman_filter import ExtendedKalmanFilter
 from utils import Position, Pose, Landmark, Bounds
+import numpy as np
 import pandas as pd
 
 if __name__ == "__main__":
@@ -37,14 +38,14 @@ if __name__ == "__main__":
     # set up the robot
     robot = Robot(env)
 
-   
+    starting_states = np.array([robot_starting_pose.pos.x, robot_starting_pose.pos.y, robot_starting_pose.theta]).reshape(3,1)
 
     # set up the (Extended) Kalman Filter if bool LINEAR is True
     LINEAR = True
     if LINEAR:
         kf = KalmanFilter(
             dt=float(dt),
-            prior = robot_starting_pose,
+            prior = starting_states,
         )
         # kf.predict()
         # kf.update()

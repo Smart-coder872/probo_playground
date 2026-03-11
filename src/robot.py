@@ -104,9 +104,9 @@ class Robot:
         """
         # TODO: fill in the function
         sensor_measurements = DataFrame(
-            {"WheelEncoder": [self.sensors["GPS"]],
+            {"WheelEncoder": [self.sensors["WheelEncoder"]],
              "LandmarkPinger": [self.sensors["LandmarkPinger"]],
-             "GPS": [self.sensors["WheelEncoder"]]
+             "GPS": [self.sensors["GPS"]]
             }
-        )
+        ).T
         return sensor_measurements
