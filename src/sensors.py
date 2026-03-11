@@ -178,6 +178,7 @@ class LandmarkPinger(SensorInterface):
         range_prop_noise=0.05,
         bearing_noise=pi / 6,
         max_range=10.0,
+        range = 0.0,
     ):
         """
         Initialize an instance of the LandmarkPinger class.
@@ -193,13 +194,13 @@ class LandmarkPinger(SensorInterface):
         self.RANGE_NOISE = range_noise  # meters
         self.RANGE_PROP_NOISE = range_prop_noise
         self.BEARING_NOISE = bearing_noise  # radians
-
         
         # TODO: (done) define the nonlinear measurement model symbolically
         x_range = j - x
         y_range = k - y
         range = sp.sqrt(x_range**2 + y_range**2)
-        
+        self.RANGE = range
+
         total_angle = sp.atan2(y_range, x_range)
         bearing = total_angle - theta
 

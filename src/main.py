@@ -67,7 +67,9 @@ if __name__ == "__main__":
     sensor_data_history = []
     kalman_filter_history = []
 
-    # set up input filepath and output filepaths
+    # set up input filepath and output filepath
+        # TODO: add which robot
+
     input_commands_filepath = "./input/motor_commands.csv"
     output_ground_truth_filepath = "./output/csv/ground_truth.csv"
     output_sensor_data_filepath = "./output/csv/sensor_data.csv"
@@ -75,8 +77,7 @@ if __name__ == "__main__":
 
 
     measurement = robot.take_sensor_measurements()
-    encoder_measurement = measurement.WheelEncoder
-    print(encoder_measurement)
+    print(measurement["WheelEncoder"])
 
     # open up the instructions, pop the first
     with open(input_commands_filepath, "r") as cmd:

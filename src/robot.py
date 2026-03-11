@@ -31,7 +31,8 @@ class Robot:
         """
         # TODO: (done) set the environment property to the parameter value
         self.env = env
-
+        self.LIN_VEL = 0.0
+        self.ANG_VEL = 0.0
 
         # TODO: (done)initialize the sensors property as an empty list
         gps_info = sensor_info["GPS"]
@@ -104,9 +105,9 @@ class Robot:
         """
         # TODO: fill in the function
         sensor_measurements = DataFrame(
-            {"WheelEncoder": [self.sensors["WheelEncoder"]],
-             "LandmarkPinger": [self.sensors["LandmarkPinger"]],
-             "GPS": [self.sensors["GPS"]]
+            {"WheelEncoder": [self.sensors["WheelEncoder"].sample()],
+             "LandmarkPinger": [self.sensors["LandmarkPinger"].sample()],
+             "GPS": [self.sensors["GPS"].sample()]
             }
         ).T
         return sensor_measurements
