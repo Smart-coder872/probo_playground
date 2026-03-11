@@ -23,9 +23,11 @@ from math import pi
 
 import numpy as np
 import pandas as pd
+import sympy as sp
 
 from sympy.abc import x, y, k, j, theta
 from sympy import symbols, Matrix, Symbol, pprint, matrix2numpy
+from numpy import sqrt, arctan2, ndarray
 from random import gauss
 
 
@@ -192,20 +194,24 @@ class LandmarkPinger(SensorInterface):
         self.RANGE_PROP_NOISE = range_prop_noise
         self.BEARING_NOISE = bearing_noise  # radians
 
+        
         # TODO: (done) define the nonlinear measurement model symbolically
-        H_range, H_bearing = self.robot.env.get_proximity_to_landmarks()
-        self.RANGE = H_range
-        self.BEARING = H_bearing
+        x_range = j - x
+        y_range = k - y
+        range = sp.sqrt(x_range**2 + y_range**2)
+        
+        total_angle = sp.atan2(y_range, x_range)
+        bearing = total_angle - theta
 
         self.h_x: Matrix = Matrix(
             [
-                [H_range],  # calculation of r (range)
-                [H_bearing]  # calculation of phi (bearing)
+                [range],  # calculation of r (range)
+                [bearing]  # calculation of phi (bearing)
             ]
         )
 
         # TODO: (done) define the Jacobian of h(x) symbolically
-        self.H: Matrix = self.h_x.jacobian()
+        self.H: Matrix = self.h_x.jacobian(Matrix([x, y, theta]))
 
         self.subs: dict[Symbol, float] = {
             x: 0.0,
@@ -241,7 +247,8 @@ class LandmarkPinger(SensorInterface):
             lm_id: the ID of the landmark that we are predicting an observation of
         """
         # TODO: find the x and y position of the given landmark
-        if lm_id == self.robot.env.LANDMARKS.id:
+        for lm in self.robot.env.LANDMARKS:
+            if lm_id == self.robot.env.LANDMARKS.id:
                 lm_x = self.robot.env.LANDMARKS.pos[0]
                 lm_y = self.robot.env.LANDMARKS.pos[1]
 
@@ -253,7 +260,7 @@ class LandmarkPinger(SensorInterface):
                 self.subs[k] = lm_y  # note: we use k for landmark y position
 
         # TODO: evaluate the Jacobian at the subs values and convert it to a numpy array
-        H_eval = None
+        H_eval = matrix2numpy(self.H)
 
         # return
         return H_eval
@@ -277,7 +284,7 @@ class LandmarkPinger(SensorInterface):
         self.subs[k] = lm_y  # note: we use k for landmark y position
 
         # TODO: evaluate the measurement model at the subs values and convert it to a numpy array
-        hx_eval = matrix2numpy(self.H.subs(self.subs))
+        hx_eval = matrix2numpy(self.H)
 
         # TODO: calculate the residual
         y = z - hx_eval * x
@@ -339,14 +346,22 @@ class GPS(SensorInterface):
         self.Y_NOISE = y_noise
 
         # TODO: fill in the measurement model
-        self.H = None
+        self.H = np.eye(2)
 
         # TODO: (done) fill in the noise model
-        self.R = [[x_noise, 0], [0, y_noise]]
+        self.R = np.diag([self.X_NOISE, self.Y_NOISE]) ** 2
 
     def sample(self):
         """
         Take a noisy GPS measurement of robot position.
         """
         # TODO: fill in the function
-        pass
+        noisy_x = gauss(self.robot.env.robot_pose.pos.x, self.X_NOISE)
+        noisy_y = gauss(self.robot.env.robot_pose.pos.y, self.Y_NOISE)
+        
+        return pd.DataFrame(
+            {
+                f"{self.name}_X Pos w/Noise": [noisy_x],
+                f"{self.name}_Bearing w/Noise": [noisy_y],
+            }
+        )

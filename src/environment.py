@@ -156,8 +156,8 @@ class Environment:
         landmark_proximities = []
 
         for x, y in self.LANDMARKS:
-            x_range = x - self.robot_pose.pos[0]
-            y_range = y - self.robot_pose.pos[1]
+            x_range = x - self.robot_pose.pos.x
+            y_range = y - self.robot_pose.pos.y
             range = sqrt(x_range**2 + y_range**2)
             
             total_angle = arctan2(y_range, x_range)

@@ -36,7 +36,7 @@ class Robot:
         # TODO: (done)initialize the sensors property as an empty list
         gps_info = sensor_info["GPS"]
 
-        self.sensors = dict[str, SensorInterface]= {
+        self.sensors: dict[str, SensorInterface]= {
             "GPS": GPS(
                 #initialize GPS class
                 robot=self
@@ -104,9 +104,9 @@ class Robot:
         """
         # TODO: fill in the function
         sensor_measurements = DataFrame(
-            {"WheelEncoder": [self.sensors[0]],
-             "LandmarkPinger": [self.sensors[1]],
-             "GPS": [self.sensors[2]]
+            {"WheelEncoder": [self.sensors["GPS"]],
+             "LandmarkPinger": [self.sensors["LandmarkPinger"]],
+             "GPS": [self.sensors["WheelEncoder"]]
             }
         )
         return sensor_measurements
