@@ -68,9 +68,9 @@ if __name__ == "__main__":
 
     # set up input filepath and output filepaths
     input_commands_filepath = "./input/motor_commands.csv"
-    output_ground_truth_filepath = "./output/ground_truth.csv"
-    output_sensor_data_filepath = "./output/sensor_data.csv"
-    output_kalman_filter_filepath = "./output/kalman_filter.csv"
+    output_ground_truth_filepath = "./output/csv/ground_truth.csv"
+    output_sensor_data_filepath = "./output/csv/sensor_data.csv"
+    output_kalman_filter_filepath = "./output/csv/kalman_filter.csv"
 
 
     measurement = robot.take_sensor_measurements()
