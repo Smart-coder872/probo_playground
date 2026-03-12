@@ -203,6 +203,7 @@ class LandmarkPinger(SensorInterface):
 
         total_angle = sp.atan2(y_range, x_range)
         bearing = total_angle - theta
+        self.BEARING = bearing
 
         self.h_x: Matrix = Matrix(
             [
