@@ -73,7 +73,7 @@ class ExtendedKalmanFilter:
             w: 0,
         }
 
-    def predict(self, u: np.ndarray):
+    def predict_a(self, u: np.ndarray):
         """
         Predicts the next state vector and its covariance matrix
         using the state transition matrix and an input control vector.
@@ -106,6 +106,43 @@ class ExtendedKalmanFilter:
 
         # TODO: (done) calculate the next covariance prediction
         self.P = F_eval*self.P*F_eval.T + self.get_Q()
+
+        # return state vector and state covariance
+        return self.x_state_ef, self.P
+    
+    def predict_b(self, u: np.ndarray):
+        """
+        Predicts the next state vector and its covariance matrix
+        using the state transition matrix and an input control vector.
+        The Kalman Filter uses the following predict equations:
+
+        x_t+1 = f(x,u)
+        P_t+1 = F * P * F.T + Q
+
+        where F is the Jacobian of f(x,u)
+
+        
+        Args:
+            u: the input control vector
+        """
+        # TODO: (done) set the value of each symbolic substitution to the actual numerical value being tracked by the EKF
+        self.subs[x] = self.x_state_ef[0]
+        self.subs[y] = self.x_state_ef[1]
+        self.subs[theta] = self.x_state_ef[2]
+        self.subs[v] = u[0]
+        self.subs[w] = u[1]
+
+        # TODO: (done) evaluate the nonlinear motion model f(x,u) at the subsitution values
+        fxu_eval = matrix2numpy(self.f_xu.subs(self.subs))
+
+        # TODO: (done) evaluate the Jacobian matrix F at the substitution values
+        F_eval = matrix2numpy(self.F.subs(fxu_eval))
+
+        # TODO: (done) calculate the next state prediction
+        self.x_state_ef = F_eval*self.x_state_ef + self.B*u
+
+        # TODO: (done) calculate the next covariance prediction
+        self.P = F_eval*self.P*F_eval.T + self.get_Q_b()
 
         # return state vector and state covariance
         return self.x_state_ef, self.P
@@ -175,7 +212,7 @@ class ExtendedKalmanFilter:
         pass
 
 
-    def get_Q(self):
+    def get_Q_a(self):
         """
         Generate white noise to apply to the process model after each prediction.
         """
@@ -200,3 +237,29 @@ class ExtendedKalmanFilter:
                 ],
             ]
         )
+    def get_Q_b(self):
+        """
+        Generate white noise to apply to the process model after each prediction.
+        """
+        # TODO: explore different standard deviation values for this function!
+        stdev = 0.4
+        return np.array(
+            [
+                [
+                    random.gauss(0, stdev),
+                    random.gauss(0, stdev),
+                    random.gauss(0, stdev),
+                ],
+                [
+                    random.gauss(0, stdev),
+                    random.gauss(0, stdev),
+                    random.gauss(0, stdev),
+                ],
+                [
+                    random.gauss(0, stdev),
+                    random.gauss(0, stdev),
+                    random.gauss(0, stdev),
+                ],
+            ]
+        )
+    
