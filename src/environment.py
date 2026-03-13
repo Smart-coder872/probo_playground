@@ -12,6 +12,8 @@ the robot's state is a vector that includes three state variables:
 x position, y position, and heading.
 """
 
+import math
+import pandas as pd
 from utils import Position, Pose, Bounds, Landmark, BearingRange, wrap_angle
 from numpy import sqrt, arctan2
 from pandas import DataFrame
@@ -153,21 +155,26 @@ class Environment:
         Return a list of the robot's true range and bearing to all landmarks.
         """
         # TODO: (done) fill in the function
-        landmark_proximities = []
+        landmark_proximities = pd.DataFrame()
 
         for landmark in self.LANDMARKS:
             l_x = landmark.pos.x
             l_y = landmark.pos.y
             x_range = l_x - self.robot_pose.pos.x
             y_range = l_y - self.robot_pose.pos.y
-            range = sqrt(x_range**2 + y_range**2)
+            range = math.sqrt(x_range**2 + y_range**2)
             
-            total_angle = arctan2(y_range, x_range)
-            bearing = total_angle - self.robot_pose.theta
+
+
+            bearing = math.atan2(y_range, x_range) - self.robot_pose.theta
+            bearing = (bearing + math.pi) % (2 * math.pi) - math.pi
+            landmark_proximities[f"Landmark{landmark.id}"] = [BearingRange(bearing, range)]
+
+            # total_angle = arctan2(y_range, x_range)
+            # bearing = total_angle - self.robot_pose.theta
             
-            result = range, bearing 
-            landmark_proximities.append(result)
- 
+            # result = range, bearing 
+            # landmark_proximities.append(result)
         return landmark_proximities       
 
     def take_state_snapshot(self):
