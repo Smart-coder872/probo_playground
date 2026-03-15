@@ -63,9 +63,9 @@ if __name__ == "__main__":
     total_timesteps = total_seconds / env.DT    #calculate time step
 
     # set up logging
-    ground_truth_history = []
-    sensor_data_history = []
-    kalman_filter_history = []
+    ground_truth_history = pd.DataFrame()
+    sensor_data_history = pd.DataFrame()
+    kalman_filter_history = pd.DataFrame()
 
     # set up input filepath and output filepath
         # TODO: add which robot
@@ -84,15 +84,35 @@ if __name__ == "__main__":
         # iterate through each timestep
         for step in range(int(total_timesteps) + 1):
             # TODO: (done) take a ground truth snapshot and add it to the history
-            ground_truth_history.append(env.take_state_snapshot())
+            ground_truth_history = pd.concat(
+                    [
+                        ground_truth_history,
+                        env.take_state_snapshot(),
+                    ],
+                    ignore_index=True,
+                )
             # TODO: (done) take sensor measurements and add it to the history
-            sensor_data_history.append(robot.take_sensor_measurements())
+            sensor_data_history = pd.concat(
+                    [
+                        sensor_data_history,
+                        robot.take_sensor_measurements(),
+                    ],
+                    ignore_index=True,
+                )
             if LINEAR:
                 # TODO: (done) call the Kalman Filter prediction step            
                 sensor_data = robot.take_sensor_measurements()
                 kf.predict(sensor_data[['LV_X', 'LV_Y', 'AV']].dropna().values)
                 # TODO: (done) call the Kalman Filter update step if new sensor data is available
-                kf.update(sensor_data[[]])
+                
+                z = [[env.get_proximity_to_landmarks()[0], 0],
+                     [0, env.get_proximity_to_landmarks()[1]]]
+                id = env.get_proximity_to_landmarks()[2]
+                
+                R = robot.sensors["LandmarkPinger"].R(z)
+                H =  robot.sensors["LandmarkPinger"].H_eval(prior, id)
+                
+                kf.update(z, H, R)
             else:
                 # TODO: (done) call the Extended Kalman Filter prediction step
                 kf.predict(robot.take_sensor_measurements())
@@ -100,7 +120,20 @@ if __name__ == "__main__":
                 kf.update()
 
             # TODO: retrieve the next motor command from the input file
-            for data_point in input_commands_filepath:
+    
+            # hit it!
+                # # retrieve new command if available or passed
+                if round(float(next_cmd[0]), 3) <= env.DT * step and not terminal:
+                    linear_input = float(next_cmd[1])
+                    angular_input = float(next_cmd[2])
+                    # out of commands
+                    try:
+                        next_cmd = next(vel_cmds)
+                    except StopIteration:
+                        terminal = True
+                
+                
+                
                 if env.time < 5:
                     linear_input = data_point[1]
                     angular_input = data_point[2]
