@@ -20,9 +20,9 @@ if __name__ == "__main__":
         [0, 4, 6, 8]]           # additional obstacle
     
     landmarks = [
-          [2.0, 2.0],            # x, y
-          [5.0, 5.0],
-          [8.0, 8.0]
+          Landmark(Position(2.0, 2.0), id=1),            # x, y
+          Landmark(Position(5.0, 5.0), id=2),
+          Landmark(Position(8.0, 8.0), id=3)
     ]              
     robot_starting_pose = Pose(Position(0.0, 0.0), 0.6)  #x, y and theta
     bearing = robot_starting_pose.theta
@@ -74,10 +74,10 @@ if __name__ == "__main__":
     output_ground_truth_filepath = "./output/csv/ground_truth.csv"
     output_sensor_data_filepath = "./output/csv/sensor_data.csv"
     output_kalman_filter_filepath = "./output/csv/kalman_filter.csv"
-
-
-    measurement = robot.take_sensor_measurements()
-    print(measurement["WheelEncoder"])
+    
+    print(robot.take_sensor_measurements().dropna().values)
+    #measurement = robot.take_sensor_measurements().dropna()
+    #print(measurement.pivot(index = ['LV', 'AV', 'Noisy X', 'Noisy Y', 'LM Pinger'], columns = columns, values = values))
 
     # open up the instructions, pop the first
     with open(input_commands_filepath, "r") as cmd:
@@ -89,9 +89,10 @@ if __name__ == "__main__":
             sensor_data_history.append(robot.take_sensor_measurements())
             if LINEAR:
                 # TODO: (done) call the Kalman Filter prediction step            
-                kf.predict(robot.take_sensor_measurements())
+                sensor_data = robot.take_sensor_measurements()
+                kf.predict(sensor_data[['LV_X', 'LV_Y', 'AV']].dropna().values)
                 # TODO: (done) call the Kalman Filter update step if new sensor data is available
-                kf.update()
+                kf.update(sensor_data[[]])
             else:
                 # TODO: (done) call the Extended Kalman Filter prediction step
                 kf.predict(robot.take_sensor_measurements())

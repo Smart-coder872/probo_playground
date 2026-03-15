@@ -19,7 +19,7 @@ how the robot's state is relatively changing, without relating the robot to the 
 """
 
 from abc import ABC, abstractmethod
-from math import pi
+from math import pi, inf
 from utils import BearingRange, Position
 
 import numpy as np
@@ -113,7 +113,7 @@ class WheelEncoder(SensorInterface):
         robot,
         linear_noise_ratio=0.01,
         angular_noise_ratio=0.01,
-        name="wheel_encoder",
+        name="Wheel_Encoder",
         interval=0.1,
         lin_noise=0.05,
         ang_noise=0.03
@@ -150,8 +150,9 @@ class WheelEncoder(SensorInterface):
 
         return pd.DataFrame(
             {
-                f"{self.name}_LinearVelocity": [lin_sample],
-                f"{self.name}_AngularVelocity": [ang_sample],
+                'LV_X': [lin_sample],
+                'LV_Y': [lin_sample],
+                'AV': [ang_sample],
             }
         )
         
@@ -301,20 +302,31 @@ class LandmarkPinger(SensorInterface):
         Reports noisy measurements of the bearing and range between the robot and all nearby landmarks.
         """
         # TODO: (done) fill in the function
-        noisy_landmark_measurements: pd.DataFrame
-        ground_truth_landmark_dists: pd.DataFrame = self.robot.env.get_proximity_to_landmarks()
-        for lm in ground_truth_landmark_dists.columns:
-            ground_truth: BearingRange = ground_truth_landmark_dists[lm].values[0]
-            if ground_truth.range <= self.MAX_RANGE:
-                noisy_range = gauss(self.RANGE, self.RANGE_NOISE + self.RANGE * self.RANGE_PROP_NOISE)
-                noisy_bearing = gauss(self.BEARING, self.BEARING_NOISE + self.BEARING)
-                bearing_range_noisy = BearingRange(
-                    noisy_bearing, noisy_range
-                )
+        #noisy_landmark_measurements: pd.DataFrame
+        noisy_measurements = []
+        gt_data = self.robot.env.get_proximity_to_landmarks()
+        for b_r_value in gt_data:
+            if b_r_value.range <= self.MAX_RANGE:
+                noisy_range = gauss(b_r_value.range, self.RANGE_NOISE + b_r_value.range * self.RANGE_PROP_NOISE)
+                noisy_bearing = gauss(b_r_value.bearing, self.BEARING_NOISE + b_r_value.bearing)
+                update_measurements = BearingRange(b_r_value.landmark_id, noisy_bearing, noisy_range)
+                noisy_measurements.append(update_measurements)
+                    #noisy_bearing, noisy_range 
+            #ground_truth: BearingRange = ground_truth_landmark_dists[lm].values[0]
+            #if ground_truth.range <= self.MAX_RANGE:
+                #noisy_range = gauss(self.RANGE, self.RANGE_NOISE + self.RANGE * self.RANGE_PROP_NOISE)
+                #noisy_bearing = gauss(self.BEARING, self.BEARING_NOISE + self.BEARING)
+                #bearing_range_noisy = BearingRange(
+                    #noisy_bearing, noisy_range
+                
             else:
-                bearing_range_noisy = BearingRange(math.inf, math.inf)
-            noisy_landmark_measurements[f"{self.name}_{lm}"] = [bearing_range_noisy]
-        return noisy_landmark_measurements
+                update_measurements = BearingRange(b_r_value.landmark_id, inf, inf)
+                noisy_measurements.append(update_measurements)
+                #noisy_measurements.append()
+                #bearing_range_noisy = BearingRange(math.inf, math.inf)
+            #noisy_landmark_measurements[f"{self.name}_{lm}"] = [bearing_range_noisy]
+        return pd.DataFrame(
+            {'LM Pinger': noisy_measurements})
            
 class GPS(SensorInterface):
     """
@@ -365,9 +377,6 @@ class GPS(SensorInterface):
         noisy_x = gauss(self.robot.env.robot_pose.pos.x, self.X_NOISE)
         noisy_y = gauss(self.robot.env.robot_pose.pos.y, self.Y_NOISE)
         
-        return pd.DataFrame(
-            {
-                f"{self.name}_X Pos w/Noise": [noisy_x],
-                f"{self.name}_Bearing w/Noise": [noisy_y],
-            }
-        )
+        return pd.DataFrame ({
+            'Noisy X': [noisy_x], 
+            'Noisy Y': [noisy_y]})

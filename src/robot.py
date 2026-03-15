@@ -10,6 +10,7 @@ and can sense both externally (GPS, landmarks, obstacles) and internally (odomet
 from environment import Environment
 from sensors import SensorInterface, WheelEncoder, LandmarkPinger, GPS
 from numpy import cos, sin
+import pandas as pd
 from pandas import DataFrame
 
 
@@ -104,10 +105,14 @@ class Robot:
         Return noisy sensor readings of the environment at this timestep, including data from all sensors, in a table format.
         """
         # TODO: fill in the function
-        sensor_measurements = DataFrame(
-            {"WheelEncoder": [self.sensors["WheelEncoder"].sample()],
-             "LandmarkPinger": [self.sensors["LandmarkPinger"].sample()],
-             "GPS": [self.sensors["GPS"].sample()]
-            }
-        ).T
+        wheelencoder_measurements = self.sensors["WheelEncoder"].sample()
+        gps_measurements =self.sensors["GPS"].sample()
+        lmpinger_measurements = self.sensors["LandmarkPinger"].sample()
+        
+        sensor_measurements = pd.concat(
+            [wheelencoder_measurements,
+             gps_measurements,
+             lmpinger_measurements
+            ], axis=1
+        )
         return sensor_measurements

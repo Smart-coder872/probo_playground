@@ -155,7 +155,7 @@ class Environment:
         Return a list of the robot's true range and bearing to all landmarks.
         """
         # TODO: (done) fill in the function
-        landmark_proximities = pd.DataFrame()
+        landmark_proximities = []
 
         for landmark in self.LANDMARKS:
             l_x = landmark.pos.x
@@ -168,14 +168,16 @@ class Environment:
 
             bearing = math.atan2(y_range, x_range) - self.robot_pose.theta
             bearing = (bearing + math.pi) % (2 * math.pi) - math.pi
-            landmark_proximities[f"Landmark{landmark.id}"] = [BearingRange(bearing, range)]
+            proximities = BearingRange(landmark.id, bearing, range)
+            landmark_proximities.append(proximities)
+            #landmark_proximities[f"Landmark{landmark.id}"] = [BearingRange(bearing, range)]
 
             # total_angle = arctan2(y_range, x_range)
             # bearing = total_angle - self.robot_pose.theta
             
             # result = range, bearing 
             # landmark_proximities.append(result)
-        return landmark_proximities       
+        return landmark_proximities     
 
     def take_state_snapshot(self):
         """

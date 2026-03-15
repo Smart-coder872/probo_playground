@@ -54,11 +54,11 @@ class KalmanFilter:
 
         # TODO: (done) define the control model
         self.B = matrix2numpy(
-            sp.Matrix([
-            [self.DT, 0, 0],
+            sp.Matrix(
+            [[self.DT, 0, 0],
             [0, self.DT, 0],
-            [0, 0, self.DT]])
-
+            [0, 0, self.DT]]
+            )
         )
 
         # TODO: (done) define the process noise
@@ -77,7 +77,7 @@ class KalmanFilter:
             u: the input control vector
         """
         # TODO: (done) update the state vector using the state transition matrix and the given control input
-        self.x_state_kf = self.F @ self.x_state_kf + self.B @ u
+        self.x_state_kf = self.F @ self.x_state_kf + self.B @ u.reshape(3,1)
 
         # TODO: (done) update the process model by propagating it through the state transition matrix and adding noise
         self.P = self.F @ self.P @ (self.F).T + self.Q
