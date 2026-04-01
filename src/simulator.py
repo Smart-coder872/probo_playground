@@ -2,7 +2,7 @@
 Main file for running the simulator.
 """
 
-from environment import Environment
+from environment import Environment, Field
 from robot import Robot
 from utils import Pose, Position, Bounds, Landmark
 from viz import Visualizer
@@ -86,6 +86,10 @@ if __name__ == "__main__":
                     len(landmarks),
                 )
             )
+        field = Field(dimensions=Bounds(0,env_info["width"],0,env_info["height"]), 
+                      variance=env_info["field"]["variance"],
+                      lengthscale=env_info["field"]["lengthscale"],
+                      random_seed=env_info["field"]["random_seed"])
         env = Environment(
             dimensions=Bounds(
                 0,
@@ -102,6 +106,7 @@ if __name__ == "__main__":
             ),
             obstacles=obstacles,
             landmarks=landmarks,
+            field=field,
             timestep=env_info["timestep"],
             lm_range=env_info["pinger_range"],
         )

@@ -12,6 +12,10 @@ environment:
   obstacles:
   - [5, 7, 5, 7] # x_min, x_max, y_min, y_max
   - [0, 4, 6, 8]
+  field:
+    variance: 0.1
+    lengthscale: 3.0
+    random_seed: 5
 
 robot:
   MotorCommands:
@@ -35,3 +39,6 @@ sensors:
     linear_noise_prop: 0.01 # m/s
     angular_noise_const: 0.1
     angular_noise_prop: 0.1
+  InsituInstrument:
+    interval: 0.5
+    noise: 0.001  # measurement units

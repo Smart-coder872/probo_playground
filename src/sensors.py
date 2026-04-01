@@ -5,6 +5,7 @@ Contains the abstract base class for sensor classes to inherit from, plus all im
 # from robot import Robot
 from utils import BearingRange, Position, SEED
 import pandas as pd
+import numpy as np
 from abc import ABC, abstractmethod
 import math
 import random
@@ -184,6 +185,49 @@ class LandmarkPinger(SensorInterface):
             to_landmarks_noisy[f"{self.name}_{lm}"] = [br_noisy]
         return to_landmarks_noisy
 
+
+class InsituInstrument(SensorInterface):
+    """
+    This class represents a sensor that measures from a continuous field in an environment.
+
+    Attributes:
+        name (str): reference identifier
+        robot (Robot): reference robot
+        interval (float): period between measurements
+        noise (float): noise of a scalar measurement
+    """
+
+    def __init__(
+        self,
+        robot,
+        name,
+        interval,
+        noise,
+    ):
+        """
+        Initialize an instance of the LandmarkPinger class.
+
+        Args:
+            name (str): reference identifier
+            robot (Robot): reference robot
+            interval (float): period between measurements
+            noise (float): noise of a scalar measurement
+        """
+        super().__init__(name, robot, interval)
+        self.noise = noise  # noise character of the sensor
+
+    def sample(self) -> pd.DataFrame:
+        """
+        Noisily measure the in situ status of the continuous field.
+
+        Returns:
+            A dictionary mapping every known landmark to the noisy measurement relating it to the robot.
+        """
+        # setup
+        robpose = self.robot.env.get_gt_robot_pose()
+        field_measurement = self.robot.env.field.field.predict(np.asarray((robpose.pos.x, robpose.pos.y)).reshape(1,-1))
+        noisy_measurement = random.gauss(field_measurement, self.noise)
+        return pd.DataFrame({self.name: noisy_measurement})
 
 # --- Proprioceptive Sensors ---
 # these measure the robot's physical relationship to its prior states

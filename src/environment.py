@@ -3,8 +3,60 @@ A simulation environment for a mobile robot operating in two dimensions.
 """
 
 from utils import Position, Pose, BearingRange, Bounds, Landmark
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import RBF, ConstantKernel
+from itertools import product
 import pandas as pd
+import numpy as np
 import math
+
+
+class Field:
+    """Creates a continuous function that can be sampled.
+    
+    Attributes:
+        DIMS (Bounds): the four corners of the environment
+        variance (float): the variance of the GP kernel
+        lengthscale (float): the lengthscale of the GP kernel
+        random_seed (int): random seed for setting world draw
+    """
+    def __init__(
+        self,
+        dimensions: Bounds,
+        variance: float = 0.1,
+        lengthscale: float = 1.0,
+        random_seed: int = 10,
+    ):
+        """
+        Initialize the continuous field in an environment.
+
+        Args:
+            dimensions (Bounds): the four corners of the environment
+            variance (float): the variance of the GP kernel
+            lengthscale (float): the lengthscale of the GP kernel
+            random_seed (int): random seed for setting consistent world draw
+        """
+        self.DIMS = dimensions
+        self.variance = variance
+        self.lengthscale = lengthscale
+        self.random_seed = random_seed
+        self._initialize_field()
+
+    def _initialize_field(self):
+        """Initializes the continuous field in an environment."""
+        self.kernel = ConstantKernel(1.0, (1e-3, 1e-3)) * RBF([self.lengthscale, self.lengthscale], (self.variance, 100*self.variance))
+        field = GaussianProcessRegressor(kernel=self.kernel, n_restarts_optimizer=15, random_state=self.random_seed)
+        x, y = np.linspace(self.DIMS.x_min, self.DIMS.x_max, 20), np.linspace(self.DIMS.y_min, self.DIMS.y_max, 20)
+        M = np.array(list(product(x, y)))
+        init_sample = field.sample_y(M, 1, random_state=self.random_seed)
+        field.fit(M, init_sample)
+        self.field = field
+
+    def info(self) -> dict:
+        return {"Variance": self.variance,
+                "Lengthscale": self.lengthscale,
+                "Random Seed": self.random_seed,
+                "Model": self.field}
 
 
 class Environment:
@@ -26,6 +78,7 @@ class Environment:
         agent_pose: Pose,
         obstacles: list[Bounds],
         landmarks: list[Landmark],
+        field: Field,
         timestep: float = 0.1,
         lm_range: float = 10.0,
     ):
@@ -38,6 +91,8 @@ class Environment:
             obstacles (list[Bounds]): a list of all intraversible areas
             landmarks (list[Landmark]): a list of all identifiable landmarks
             timestep (float): the size of one timestep in seconds
+            lm_range (float): detectable range of landmarks
+            field (list[float]): parameters for establishing a continuous field
         """
         # nab the dimensions
         self.DIMS = dimensions
@@ -64,6 +119,9 @@ class Environment:
             assert dimensions.within_bounds(l.pos)
         assert len(set(l.id for l in landmarks)) == len(landmarks)
         self.LANDMARKS = landmarks
+
+        # create the continuous field
+        self.field = field
 
     # --- Motion Execution ---
 
@@ -184,6 +242,7 @@ class Environment:
             "Landmarks": [l.to_dict() for l in self.LANDMARKS],
             "Timestep": self.DT,
             "Pinger Range": self.lm_range,
+            "Field": self.field.info()
         }
 
     def take_gt_snapshot(self):
@@ -210,3 +269,4 @@ class Environment:
             left_index=True,
             right_index=True,
         )
+

@@ -117,3 +117,4 @@ class Bounds:
             "y_min": self.y_min,
             "y_max": self.y_max,
         }
+

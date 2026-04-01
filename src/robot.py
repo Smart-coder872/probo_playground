@@ -2,11 +2,14 @@
 
 from utils import NEAR_ZERO, floating_mod_zero, SEED
 from environment import Environment
-from sensors import SensorInterface, LandmarkPinger, GPS, Odometry
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import RBF, ConstantKernel
+from sensors import SensorInterface, LandmarkPinger, GPS, Odometry, InsituInstrument
 
 import math
 import random
 import pandas as pd
+import numpy as np
 
 
 class Robot:
@@ -48,6 +51,7 @@ class Robot:
         gps_info = sensor_info["GPS"]
         lmp_info = sensor_info["LandmarkPinger"]
         odom_info = sensor_info["Odometry"]
+        inst_info = sensor_info["InsituInstrument"]
         self.sensors: dict[str, SensorInterface] = {
             "GPS": GPS(
                 robot=self,
@@ -75,7 +79,19 @@ class Robot:
                 ang_noise=odom_info["angular_noise_const"],
                 angular_noise_ratio=odom_info["angular_noise_prop"],
             ),
+            "InsituInstrument": InsituInstrument(
+                robot=self,
+                name="InsituInstrument",
+                interval=inst_info["interval"],
+                noise=inst_info["noise"],
+            )
         }
+
+        # initialize the robot's belief
+        self.kernel = self.env.field.kernel  # just make it the same as env kernel for now
+        self.belief = GaussianProcessRegressor(kernel=self.kernel, n_restarts_optimizer=15, random_state=self.env.field.random_seed)
+        self.pose_history = []
+        self.observation_history = []
 
     # --- Controller Methods ---
     def agent_step_differential(self, lin_vel: float, ang_vel: float):
@@ -152,6 +168,14 @@ class Robot:
         measurements["CMD_LinearVelocity"] = [self.cmd_lin_vel]
         measurements["CMD_AngularVelocity"] = [self.cmd_ang_vel]
 
+        # update the robot's belief
+        try:
+            rob_pose = self.env.get_gt_robot_pose()
+            self.pose_history.append((rob_pose.pos.x, rob_pose.pos.y))
+            self.observation_history.append(measurements["InsituInstrument"].values)
+            self.belief.fit(np.asarray(self.pose_history), np.asarray(self.observation_history))
+        except:
+            pass
         # return
         return measurements
 
@@ -176,7 +200,7 @@ class Robot:
         Return a dictionary of frozen environment information.
         """
         # set up the table
-        columns = ["Sensor Name", "Constant Noise", "Proportional Noise"]
+        columns = ["Sensor Name", "Constant Noise", "Proportional Noise", "Model"]
         data = []
 
         # start with controller
@@ -199,6 +223,17 @@ class Robot:
         ang_row["Sensor Name"] = name + f"Angular"
         ang_row["Constant Noise"] = self.EXECUTION_NOISE_ANGULAR
         data.append(ang_row)
+
+        # add the belief
+        belief_row = pd.DataFrame(
+            0,
+            index=pd.RangeIndex(1),
+            columns=columns,
+        )
+        belief_row["Sensor Name"] = "belief"
+        belief_row["Model"] = self.belief
+        data.append(belief_row)
+
         # iterate through sensors
         for name, sensor in self.sensors.items():
             # GPS has x noise and y noise
@@ -264,6 +299,15 @@ class Robot:
                 bearing_row["Sensor Name"] = name + f"Angular"
                 bearing_row["Constant Noise"] = sensor.BEARING_NOISE
                 data.append(bearing_row)
+            elif isinstance(sensor, InsituInstrument):
+                instrument_row = pd.DataFrame(
+                    0,
+                    index=pd.RangeIndex(1),
+                    columns=columns,
+                )
+                instrument_row["Sensor Name"] = name
+                instrument_row["Constant Noise"] = sensor.noise
+                data.append(instrument_row)
 
         # return
         return pd.concat(data)

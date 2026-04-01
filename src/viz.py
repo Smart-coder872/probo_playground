@@ -6,6 +6,8 @@ from matplotlib.animation import FuncAnimation, PillowWriter
 import pickle
 from pathlib import Path
 from utils import Pose, Landmark
+from itertools import product
+import copy
 
 
 class Visualizer:
@@ -51,6 +53,109 @@ class Visualizer:
         ax.set_ylim(dims["y_min"] - 1, dims["y_max"] + 1)
         ax.set_aspect("equal")
         ax.grid(True, alpha=0.3)
+
+        # Plot ground truth field
+        x = np.linspace(dims["x_min"], dims["x_max"], 10)
+        y = np.linspace(dims["y_min"], dims["y_max"], 10)
+        X, Y = np.meshgrid(x, y)
+        M = np.array(list(product(x,y)))
+        
+        model = self.env_info["Field"]["Model"]
+        c_sample = model.sample_y(M, 1, random_state=self.env_info["Field"]["Random Seed"])
+        ax.contourf(X, Y, c_sample.reshape(10,10).T, 10, order=-10)
+
+
+        # set up env boundaries
+        width = dims["x_max"] - dims["x_min"]
+        height = dims["y_max"] - dims["y_min"]
+        walls = patches.Rectangle(
+            (dims["x_min"], dims["y_min"]),
+            width,
+            height,
+            linewidth=5,
+            edgecolor="black",
+            facecolor="none",
+            alpha=1.0,
+        )
+        ax.add_patch(walls)
+
+        # Plot obstacles
+        for obs in self.env_info["Obstacles"]:
+            width = obs["x_max"] - obs["x_min"]
+            height = obs["y_max"] - obs["y_min"]
+            rect = patches.Rectangle(
+                (obs["x_min"], obs["y_min"]),
+                width,
+                height,
+                linewidth=2,
+                edgecolor="black",
+                facecolor="gray",
+                alpha=0.5,
+                label="Obstacle" if obs == self.env_info["Obstacles"][0] else "",
+            )
+            ax.add_patch(rect)
+
+        # Plot landmarks
+        for lm in self.env_info["Landmarks"]:
+            # Plot pinging range circle
+            circle = patches.Circle(
+                (lm["pos"]["x"], lm["pos"]["y"]),
+                self.env_info["Pinger Range"],
+                linewidth=1,
+                edgecolor="red",
+                facecolor="red",
+                alpha=0.1,
+                label="Pinging Range" if lm == self.env_info["Landmarks"][0] else "",
+            )
+            ax.add_patch(circle)
+
+            # plot floating point landmarks
+            ax.plot(
+                lm["pos"]["x"],
+                lm["pos"]["y"],
+                "r*",
+                markersize=15,
+                label="Landmark" if lm == self.env_info["Landmarks"][0] else "",
+            )
+            ax.annotate(
+                f"LM{lm['id']}",
+                (lm["pos"]["x"], lm["pos"]["y"]),
+                xytext=(5, 5),
+                textcoords="offset points",
+                fontsize=10,
+                color="red",
+            )
+        
+        ax.legend(loc="upper right")
+        return fig, ax
+
+    def plot_belief_env(self):
+        """
+        Plot the environment features with no trajectories from belief.
+        """
+        # set up axis
+        fig, ax = plt.subplots(figsize=(10, 10))
+        ax.set_xlabel("X Position (m)")
+        ax.set_ylabel("Y Position (m)")
+        ax.set_title(f"Environment Map")
+
+        # Set up the plot boundaries
+        dims = self.env_info["Dimensions"]
+        ax.set_xlim(dims["x_min"] - 1, dims["x_max"] + 1)
+        ax.set_ylim(dims["y_min"] - 1, dims["y_max"] + 1)
+        ax.set_aspect("equal")
+        ax.grid(True, alpha=0.3)
+
+        # Plot belief truth field
+        x = np.linspace(dims["x_min"], dims["x_max"], 10)
+        y = np.linspace(dims["y_min"], dims["y_max"], 10)
+        X, Y = np.meshgrid(x, y)
+        M = np.array(list(product(x,y)))
+        
+        belief_info = self.sensor_info.loc[self.sensor_info["Sensor Name"] == "belief"]
+        model = belief_info["Model"][0]
+        c_sample = model.sample_y(M, 1, random_state=self.env_info["Field"]["Random Seed"])
+        ax.contourf(X, Y, c_sample.reshape(10,10).T, 10)
 
         # set up env boundaries
         width = dims["x_max"] - dims["x_min"]
@@ -314,6 +419,27 @@ class Visualizer:
         plt.savefig(self.output_path / "dataset_viz.png")
         print("Finished plotting at path: ")
         print(self.output_path / "dataset_viz.png")
+
+        self.plot_belief_env()
+        self.plot_single_trajectory(
+            "Ground Truth",
+            self.poses_from_gt(),
+            "green",
+        )
+        self.plot_single_trajectory(
+            "Dead Reckoning",
+            self.poses_from_odom(),
+            "red",
+        )
+        self.plot_single_trajectory(
+            "GPS Only",
+            self.poses_from_gps(),
+            "orange",
+            scatter=True,
+        )
+        plt.savefig(self.output_path / "dataset_belief_viz.png")
+        print("Finished plotting at path: ")
+        print(self.output_path / "dataset__belief_viz.png")
 
     def animate_trajectories(
         self,
