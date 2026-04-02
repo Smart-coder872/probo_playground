@@ -221,7 +221,7 @@ class InsituInstrument(SensorInterface):
         Noisily measure the in situ status of the continuous field.
 
         Returns:
-            A dictionary mapping every known landmark to the noisy measurement relating it to the robot.
+            A dictionary containing the noisy field measurement.
         """
         field_measurement = self.robot.env.get_gt_field_value()
         noisy_measurement = random.gauss(field_measurement, self.noise)
