@@ -41,4 +41,4 @@ sensors:
     angular_noise_prop: 0.1
   InsituInstrument:
     interval: 0.5
-    noise: 0.001  # measurement units
+    noise: 0.1  # measurement units

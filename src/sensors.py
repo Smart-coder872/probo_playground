@@ -223,9 +223,7 @@ class InsituInstrument(SensorInterface):
         Returns:
             A dictionary mapping every known landmark to the noisy measurement relating it to the robot.
         """
-        # setup
-        robpose = self.robot.env.get_gt_robot_pose()
-        field_measurement = self.robot.env.field.field.predict(np.asarray((robpose.pos.x, robpose.pos.y)).reshape(1,-1))
+        field_measurement = self.robot.env.get_gt_field_value()
         noisy_measurement = random.gauss(field_measurement, self.noise)
         return pd.DataFrame({self.name: noisy_measurement})
 

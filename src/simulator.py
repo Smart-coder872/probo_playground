@@ -126,7 +126,7 @@ if __name__ == "__main__":
         sensor_data_history = pd.DataFrame()
 
         # open up the instructions, pop the first
-        with open(CMD_PATH, "r") as cmd:
+        with open(CMD_PATH, "r") as cmd:  # update this to be where the planner is executed
             # start popping velocity commands
             vel_cmds = csv.reader(cmd)
             next_cmd = next(vel_cmds)  # skip column names
@@ -145,13 +145,22 @@ if __name__ == "__main__":
                     ],
                     ignore_index=True,
                 )
+                
+                measurements = robot.take_sensor_measurements()
                 sensor_data_history = pd.concat(
                     [
                         sensor_data_history,
-                        robot.take_sensor_measurements(),
+                        measurements,
                     ],
                     ignore_index=True,
                 )
+
+                # Update the robot's belief
+                try:
+                    robot.update_belief(measurements["InsituInstrument"].values,
+                                        robot.env.agent_pose)
+                except:
+                    pass  # no measurement available to use
 
                 # # retrieve new command if available or passed
                 if round(float(next_cmd[0]), 3) <= env.DT * step and not terminal:

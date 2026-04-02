@@ -54,7 +54,12 @@ class Visualizer:
         ax.set_aspect("equal")
         ax.grid(True, alpha=0.3)
 
-        # Plot ground truth field
+        # Plot ground truth field and field measuremnts
+        belief_info = self.sensor_info.loc[self.sensor_info["Sensor Name"] == "belief"]
+        obs_model = belief_info["Model"][0]
+        measurements = obs_model.y_train_
+        measurement_positions = obs_model.X_train_
+
         x = np.linspace(dims["x_min"], dims["x_max"], 10)
         y = np.linspace(dims["y_min"], dims["y_max"], 10)
         X, Y = np.meshgrid(x, y)
@@ -62,7 +67,11 @@ class Visualizer:
         
         model = self.env_info["Field"]["Model"]
         c_sample = model.sample_y(M, 1, random_state=self.env_info["Field"]["Random Seed"])
-        ax.contourf(X, Y, c_sample.reshape(10,10).T, 10, order=-10)
+        ax.contourf(X, Y, c_sample.reshape(10,10).T, 10,
+                    vmin=np.nanmin(measurements), vmax=np.nanmax(measurements))
+
+        ax.scatter(measurement_positions[:,0], measurement_positions[:,1], c=measurements, cmap="viridis",
+                   s=200, lw=1.5, edgecolors='k', vmin=np.nanmin(measurements), vmax=np.nanmax(measurements))
 
 
         # set up env boundaries
@@ -137,7 +146,7 @@ class Visualizer:
         fig, ax = plt.subplots(figsize=(10, 10))
         ax.set_xlabel("X Position (m)")
         ax.set_ylabel("Y Position (m)")
-        ax.set_title(f"Environment Map")
+        ax.set_title(f"Belief Map")
 
         # Set up the plot boundaries
         dims = self.env_info["Dimensions"]
@@ -147,15 +156,26 @@ class Visualizer:
         ax.grid(True, alpha=0.3)
 
         # Plot belief truth field
+        belief_info = self.sensor_info.loc[self.sensor_info["Sensor Name"] == "belief"]
+        obs_model = belief_info["Model"][0]
+        measurements = obs_model.y_train_
+        measurement_positions = obs_model.X_train_
+
         x = np.linspace(dims["x_min"], dims["x_max"], 10)
         y = np.linspace(dims["y_min"], dims["y_max"], 10)
         X, Y = np.meshgrid(x, y)
         M = np.array(list(product(x,y)))
         
-        belief_info = self.sensor_info.loc[self.sensor_info["Sensor Name"] == "belief"]
-        model = belief_info["Model"][0]
-        c_sample = model.sample_y(M, 1, random_state=self.env_info["Field"]["Random Seed"])
-        ax.contourf(X, Y, c_sample.reshape(10,10).T, 10)
+        c_sample, std_dev = obs_model.predict(M, return_std=True)
+        ax.contourf(X, Y, c_sample.reshape(10,10).T, 10,
+                    vmin=np.nanmin(measurements), vmax=np.nanmax(measurements))
+        ax.scatter(measurement_positions[:,0], measurement_positions[:,1], c=measurements, cmap="viridis",
+                   s=200, lw=1.5, edgecolors='k', vmin=np.nanmin(measurements), vmax=np.nanmax(measurements))
+        
+        ax_inset = ax.inset_axes([0.8, 0.05, 0.3, 0.3])
+        ax_inset.contourf(X, Y, std_dev.reshape(10,10).T, 10)
+        ax_inset.scatter(measurement_positions[:,0], measurement_positions[:,1], s=1, lw=1.5, edgecolors='k')
+        ax_inset.set_title("Belief Uncertainty")
 
         # set up env boundaries
         width = dims["x_max"] - dims["x_min"]
@@ -426,17 +446,17 @@ class Visualizer:
             self.poses_from_gt(),
             "green",
         )
-        self.plot_single_trajectory(
-            "Dead Reckoning",
-            self.poses_from_odom(),
-            "red",
-        )
-        self.plot_single_trajectory(
-            "GPS Only",
-            self.poses_from_gps(),
-            "orange",
-            scatter=True,
-        )
+        # self.plot_single_trajectory(
+        #     "Dead Reckoning",
+        #     self.poses_from_odom(),
+        #     "red",
+        # )
+        # self.plot_single_trajectory(
+        #     "GPS Only",
+        #     self.poses_from_gps(),
+        #     "orange",
+        #     scatter=True,
+        # )
         plt.savefig(self.output_path / "dataset_belief_viz.png")
         print("Finished plotting at path: ")
         print(self.output_path / "dataset__belief_viz.png")

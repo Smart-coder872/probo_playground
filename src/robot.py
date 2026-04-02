@@ -88,10 +88,25 @@ class Robot:
         }
 
         # initialize the robot's belief
-        self.kernel = self.env.field.kernel  # just make it the same as env kernel for now
-        self.belief = GaussianProcessRegressor(kernel=self.kernel, n_restarts_optimizer=15, random_state=self.env.field.random_seed)
-        self.pose_history = []
-        self.observation_history = []
+        self.kernel = self.env.continuous_field.kernel  # the same as the environment kernel
+        self.belief = GaussianProcessRegressor(kernel=self.kernel,
+                                               n_restarts_optimizer=15,
+                                               random_state=self.env.continuous_field.random_seed)
+        self.pose_history = []  # store history of observation poses for belief
+        self.observation_history = []  # store history of observations for belief
+    
+    # --- Robot Belief Methods ---
+    def update_belief(self, measurement, pose):
+        """
+        Updates the robot's belief based on a located-observation.
+
+        Inputs:
+            measurement (float): value of the field being measured
+            pose (Position): location from where the measurement was taken
+        """
+        self.pose_history.append((pose.pos.x, pose.pos.y))
+        self.observation_history.append(measurement)
+        self.belief.fit(np.asarray(self.pose_history), np.asarray(self.observation_history))
 
     # --- Controller Methods ---
     def agent_step_differential(self, lin_vel: float, ang_vel: float):
@@ -167,16 +182,7 @@ class Robot:
         # also grab the command velocities
         measurements["CMD_LinearVelocity"] = [self.cmd_lin_vel]
         measurements["CMD_AngularVelocity"] = [self.cmd_ang_vel]
-
-        # update the robot's belief
-        try:
-            rob_pose = self.env.get_gt_robot_pose()
-            self.pose_history.append((rob_pose.pos.x, rob_pose.pos.y))
-            self.observation_history.append(measurements["InsituInstrument"].values)
-            self.belief.fit(np.asarray(self.pose_history), np.asarray(self.observation_history))
-        except:
-            pass
-        # return
+        
         return measurements
 
     def take_gt_snapshot(self) -> pd.DataFrame:

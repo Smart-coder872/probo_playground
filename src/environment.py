@@ -121,7 +121,7 @@ class Environment:
         self.LANDMARKS = landmarks
 
         # create the continuous field
-        self.field = field
+        self.continuous_field = field
 
     # --- Motion Execution ---
 
@@ -231,6 +231,12 @@ class Environment:
                 lms.append(l)
         return lms
 
+    def get_gt_field_value(self) -> float:
+        """
+        Returns the ground truth field measurement of the robot at the current ground truth pose.
+        """
+        return self.continuous_field.field.predict(np.asarray((self.agent_pose.pos.x, self.agent_pose.pos.y)).reshape(1,-1))
+
     # --- Logging ---
     def info(self) -> dict:
         """
@@ -242,7 +248,7 @@ class Environment:
             "Landmarks": [l.to_dict() for l in self.LANDMARKS],
             "Timestep": self.DT,
             "Pinger Range": self.lm_range,
-            "Field": self.field.info()
+            "Field": self.continuous_field.info()
         }
 
     def take_gt_snapshot(self):
