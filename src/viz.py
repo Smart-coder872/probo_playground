@@ -8,6 +8,7 @@ from pathlib import Path
 from utils import Pose, Landmark
 from itertools import product
 import copy
+from reward import Reward
 
 
 class Visualizer:
@@ -27,6 +28,8 @@ class Visualizer:
         sensor_log_path = output_path / "sensor_log.pkl"
         env_info_path = output_path / "env_info.pkl"
         sensor_info_path = output_path / "sensor_info.pkl"
+        action_info_path = output_path / "action_info.pkl"
+        reward_info_path = output_path / "reward_info.pkl"
         with open(sensor_log_path, "rb") as f:
             self.sensor_log = pickle.load(f)
         with open(gt_log_path, "rb") as f:
@@ -36,6 +39,10 @@ class Visualizer:
             self.env_info = pickle.load(f)
         with open(sensor_info_path, "rb") as f:
             self.sensor_info = pickle.load(f)
+        with open(action_info_path, "rb") as f:
+            self.action_info = pickle.load(f)
+        with open(reward_info_path, "rb") as f:
+            self.reward_info = pickle.load(f)
 
     def plot_env(self):
         """
@@ -167,15 +174,25 @@ class Visualizer:
         M = np.array(list(product(x,y)))
         
         c_sample, std_dev = obs_model.predict(M, return_std=True)
-        ax.contourf(X, Y, c_sample.reshape(10,10).T, 10,
-                    vmin=np.nanmin(measurements), vmax=np.nanmax(measurements))
+        ax.contourf(X, Y, c_sample.reshape(10,10).T, 20)
+                    #vmin=np.nanmin(measurements), vmax=np.nanmax(measurements))
         ax.scatter(measurement_positions[:,0], measurement_positions[:,1], c=measurements, cmap="viridis",
                    s=200, lw=1.5, edgecolors='k', vmin=np.nanmin(measurements), vmax=np.nanmax(measurements))
         
-        ax_inset = ax.inset_axes([0.8, 0.05, 0.3, 0.3])
-        ax_inset.contourf(X, Y, std_dev.reshape(10,10).T, 10)
+        ax_inset = ax.inset_axes([0.8, 0.37, 0.3, 0.3])
+        ax_inset.contourf(X, Y, std_dev.reshape(10,10).T, 20)
         ax_inset.scatter(measurement_positions[:,0], measurement_positions[:,1], s=1, lw=1.5, edgecolors='k')
         ax_inset.set_title("Belief Uncertainty")
+
+        # Plot the Expected Reward Field
+        reward_object = Reward(self.reward_info["Reward Params"])
+        reward_func = reward_object.reward
+        c_sample, c_std = obs_model.predict(M, return_std=True)
+        computed_reward = reward_func(c_sample, np.sqrt(c_std))
+
+        ax_inset = ax.inset_axes([0.8, 0.0, 0.3, 0.3])
+        ax_inset.contourf(X, Y, computed_reward.reshape(10,10).T, 20)
+        ax_inset.set_title("Reward Field")
 
         # set up env boundaries
         width = dims["x_max"] - dims["x_min"]

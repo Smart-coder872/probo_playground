@@ -10,6 +10,7 @@ import math
 import random
 import pandas as pd
 import numpy as np
+import copy
 
 
 class Robot:
@@ -88,7 +89,7 @@ class Robot:
         }
 
         # initialize the robot's belief
-        self.kernel = self.env.continuous_field.kernel  # the same as the environment kernel
+        self.kernel = copy.deepcopy(self.env.continuous_field.kernel)  # the same as the environment kernel
         self.belief = GaussianProcessRegressor(kernel=self.kernel,
                                                n_restarts_optimizer=15,
                                                random_state=self.env.continuous_field.random_seed)
