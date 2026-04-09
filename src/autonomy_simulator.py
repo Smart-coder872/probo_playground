@@ -6,6 +6,7 @@ from environment import Environment, Field
 from robot import Robot
 from actions import Actions
 from reward import Reward
+from planner import Planner
 from utils import Pose, Position, Bounds, Landmark
 from viz import Visualizer
 import pandas as pd
@@ -131,6 +132,7 @@ if __name__ == "__main__":
         )
         reward = Reward(reward_info)
         reward_function = reward.reward
+        planner = Planner(actions, reward_function, robot)
 
         # set up timekeeping
         total_seconds = env_info["runtime"]
@@ -178,15 +180,8 @@ if __name__ == "__main__":
             elapsed_time = env.DT * step
             elapsed_action_time = env.DT * steps_since_last_action
             if round(elapsed_action_time) >= actions.action_step:
-                # select a random valid action
-                waypoint_targets = actions.get_actions_as_waypoints(robot, "differential")
-                action = np.random.choice(list(waypoint_targets.keys()))
-
-                waypoint = waypoint_targets[action]
-                waypoint_mean, waypoint_cov = robot.belief.predict(np.asarray([waypoint[0], waypoint[1]]).reshape(1, -1), return_cov=True)
-                action_reward = reward_function(waypoint_mean[0], waypoint_cov[0])
-                print(f"Expected Action Reward: {action_reward}")
-                
+                print(f"Planning new action: timestep {step}")
+                action = planner.select_action()
                 current_lin_vel, current_ang_vel = actions.command_actions[action]
                 steps_since_last_action = 0
                 elapsed_action_time = 0.0

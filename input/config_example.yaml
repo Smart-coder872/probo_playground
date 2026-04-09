@@ -1,7 +1,7 @@
 environment:
   width: 10 # meters
   height: 10 # meters
-  runtime: 30 # seconds
+  runtime: 100 # seconds
   timestep: 0.1 # seconds
   robot_start: [0.0, 0.0, 0.6] # x, y, theta
   pinger_range: 3.0 # meters
