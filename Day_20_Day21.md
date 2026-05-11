@@ -82,4 +82,4 @@ Ensure that you understand the new simulation loop. When are new actions updated
 ### Excercise 3
 #### As you change the parameter of the UCB function, what do you notice about the reward field and its relationship to the mean and uncertainty of the belief state? As you modify the action space, what do you notice about the expressiveness of the robot’s path?
 
-- Decreasing 
+- Decreasing the UCB parameter makes the mean value stronger and the robot is more exploitive. Increasing the UCB parameter makes the uncertainity stronger which encourages more exploration. 
