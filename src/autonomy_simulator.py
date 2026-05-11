@@ -180,8 +180,15 @@ if __name__ == "__main__":
             elapsed_time = env.DT * step
             elapsed_action_time = env.DT * steps_since_last_action
             if round(elapsed_action_time) >= actions.action_step:
-                print(f"Planning new action: timestep {step}")
-                action = planner.select_action()
+                # select a random valid action
+                waypoint_targets = actions.get_actions_as_waypoints(robot, "differential")
+                action = np.random.choice(list(waypoint_targets.keys()))
+
+                waypoint = waypoint_targets[action]
+                waypoint_mean, waypoint_cov = robot.belief.predict(np.asarray([waypoint[0], waypoint[1]]).reshape(1, -1), return_cov=True)
+                action_reward = reward_function(waypoint_mean[0], waypoint_cov[0])
+                print(f"Expected Action Reward: {action_reward}")
+        
                 current_lin_vel, current_ang_vel = actions.command_actions[action]
                 steps_since_last_action = 0
                 elapsed_action_time = 0.0
@@ -189,7 +196,7 @@ if __name__ == "__main__":
             # move the robot with current commands
             robot.agent_step_differential(current_lin_vel, current_ang_vel)
             steps_since_last_action += 1
-
+            
         # log the results
         pickle.dump(
             ground_truth_history, open(OUTPUT_PATH / "groundtruth_log.pkl", "wb")

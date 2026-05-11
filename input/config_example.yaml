@@ -15,7 +15,7 @@ environment:
   field:
     variance: 0.1
     lengthscale: 3.0
-    random_seed: 8
+    random_seed: 7
 
 robot:
   MotorCommands:
@@ -51,4 +51,4 @@ action:
 
 reward:
   name: "ucb"
-  alpha: 9.0
+  alpha: 1.0
