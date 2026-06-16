@@ -107,19 +107,19 @@ class KalmanFilter:
             R: the measurement noise model (covariance)
         """
         # TODO: (done) calculate the total uncertainty in the system
-        S = H * self.P * H.T + R
+        S = H @ self.P @ H.T + R
 
         # TODO: (done) calculate the Kalman Gain, AKA the percentage of the total uncertainty that came from the estimate rather than the measurement
-        K = self.P * H.T * matrix2numpy(Inverse(S))
+        K = self.P @ H.T @ S.T
 
         # TODO: (done) calculate the residual, AKA the error between the observation and what we expected the observation to be given our estimated state vector
-        y = z - H *self.x_state_kf
+        y = z - H @ self.x_state_kf
 
         # TODO: (done) update the state vector
-        self.x_state_kf += K * y
+        self.x_state_kf = self.x_state_kf.T + K @ y
 
         # TODO: (done) update the process model
-        self.P -= K * H * self.P
+        self.P = self.P.T - K @ H * self.P
 
         return self.x_state_kf, self.P
 

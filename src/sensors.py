@@ -179,7 +179,7 @@ class LandmarkPinger(SensorInterface):
         interval=1.0,
         range_noise=0.5,
         range_prop_noise=0.05,
-        bearing_noise=pi / 6,
+        bearing_noise=np.pi/6,
         max_range=10.0,
         range = 0.0,
     ):
@@ -238,8 +238,9 @@ class LandmarkPinger(SensorInterface):
             Sensor noise model for pinger measurement
         """
         bearing_stdev = self.BEARING_NOISE
-        range_stdev = self.RANGE_NOISE + z[0] * self.RANGE_PROP_NOISE
-        return np.diag([range_stdev, bearing_stdev]) ** 2
+        range_stdev = self.RANGE_NOISE + self.RANGE_PROP_NOISE  * z[0][0]
+        print (bearing_stdev, range_stdev)
+        return range_stdev**2, bearing_stdev**2
 
     def H_eval(self, x, lm_id):
         """
@@ -252,10 +253,10 @@ class LandmarkPinger(SensorInterface):
             lm_id: the ID of the landmark that we are predicting an observation of
         """
         # TODO: find the x and y position of the given landmark
-        for lm in self.robot.env.LANDMARKS:
-            if lm_id == self.robot.env.LANDMARKS.id:
-                lm_x = self.robot.env.LANDMARKS.pos[0]
-                lm_y = self.robot.env.LANDMARKS.pos[1]
+        for lm in self.robot.env.get_proximity_to_landmarks():
+            if lm_id == lm[2]:
+                lm_x = lm[0]
+                lm_y = lm[1]
 
         # TODO: (done) set the value of each symbolic substitution to the actual numerical value that was passed in
                 self.subs[x] = x[0]
@@ -306,10 +307,10 @@ class LandmarkPinger(SensorInterface):
         noisy_measurements = []
         gt_data = self.robot.env.get_proximity_to_landmarks()
         for b_r_value in gt_data:
-            if b_r_value.range <= self.MAX_RANGE:
-                noisy_range = gauss(b_r_value.range, self.RANGE_NOISE + b_r_value.range * self.RANGE_PROP_NOISE)
-                noisy_bearing = gauss(b_r_value.bearing, self.BEARING_NOISE + b_r_value.bearing)
-                update_measurements = BearingRange(b_r_value.landmark_id, noisy_bearing, noisy_range)
+            if b_r_value[2] <= self.MAX_RANGE:
+                noisy_range = gauss(b_r_value[2], self.RANGE_NOISE + b_r_value[2] * self.RANGE_PROP_NOISE)
+                noisy_bearing = gauss(b_r_value[1], self.BEARING_NOISE + b_r_value[1])
+                update_measurements = BearingRange(b_r_value[0], noisy_bearing, noisy_range)
                 noisy_measurements.append(update_measurements)
                     #noisy_bearing, noisy_range 
             #ground_truth: BearingRange = ground_truth_landmark_dists[lm].values[0]
@@ -320,7 +321,7 @@ class LandmarkPinger(SensorInterface):
                     #noisy_bearing, noisy_range
                 
             else:
-                update_measurements = BearingRange(b_r_value.landmark_id, inf, inf)
+                update_measurements = BearingRange(b_r_value[0], inf, inf)
                 noisy_measurements.append(update_measurements)
                 #noisy_measurements.append()
                 #bearing_range_noisy = BearingRange(math.inf, math.inf)

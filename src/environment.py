@@ -158,8 +158,9 @@ class Environment:
         landmark_proximities = []
 
         for landmark in self.LANDMARKS:
-            l_x = landmark.pos.x
-            l_y = landmark.pos.y
+            land_list = landmark.to_list()
+            l_x = land_list[0]
+            l_y = land_list[1]
             x_range = l_x - self.robot_pose.pos.x
             y_range = l_y - self.robot_pose.pos.y
             range = math.sqrt(x_range**2 + y_range**2)
@@ -168,7 +169,8 @@ class Environment:
 
             bearing = math.atan2(y_range, x_range) - self.robot_pose.theta
             bearing = (bearing + math.pi) % (2 * math.pi) - math.pi
-            proximities = BearingRange(landmark.id, bearing, range)
+            
+            proximities = [land_list[2], bearing, range]
             landmark_proximities.append(proximities)
             #landmark_proximities[f"Landmark{landmark.id}"] = [BearingRange(bearing, range)]
 

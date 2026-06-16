@@ -1,7 +1,20 @@
-[project]
-name = "probo_playground"
-version = "0.1.0"
-
-[tool.pytest.ini_options]
+# pyproject.toml
+[tool.pytest]
 pythonpath = ["src"]
-testpaths = ["test"]
+minversion = "9.0"
+addopts = [
+    "-ra",
+    "-q",
+    "--cov=src",
+    "--cov-report=term-missing",
+    "--cov-report=html:htmlcov",
+    "-vv",
+]
+testpaths = ["tests"]
+timeout = 30
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-cov",
+]

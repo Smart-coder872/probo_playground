@@ -75,7 +75,6 @@ if __name__ == "__main__":
     output_sensor_data_filepath = "./output/csv/sensor_data.csv"
     output_kalman_filter_filepath = "./output/csv/kalman_filter.csv"
     
-    print(robot.take_sensor_measurements().dropna().values)
     #measurement = robot.take_sensor_measurements().dropna()
     #print(measurement.pivot(index = ['LV', 'AV', 'Noisy X', 'Noisy Y', 'LM Pinger'], columns = columns, values = values))
 
@@ -105,12 +104,10 @@ if __name__ == "__main__":
                 kf.predict(sensor_data[['LV_X', 'LV_Y', 'AV']].dropna().values)
                 # TODO: (done) call the Kalman Filter update step if new sensor data is available
                 
-                z = [[env.get_proximity_to_landmarks()[0], 0],
-                     [0, env.get_proximity_to_landmarks()[1]]]
-                id = env.get_proximity_to_landmarks()[2]
-                
+                z = np.array((env.get_proximity_to_landmarks()[1], env.get_proximity_to_landmarks()[2]))
+                id = env.get_proximity_to_landmarks()[0]
                 R = robot.sensors["LandmarkPinger"].R(z)
-                H =  robot.sensors["LandmarkPinger"].H_eval(prior, id)
+                H =  robot.sensors["LandmarkPinger"].H_eval(starting_states, id)
                 
                 kf.update(z, H, R)
             else:
@@ -152,7 +149,7 @@ if __name__ == "__main__":
 
 
             # TODO: execute the motor command
-            robot.robot_step_differential(linear_input, angular_input)
+                robot.robot_step_differential(linear_input, angular_input)
     # at the end, write the histories into output files
     with open(output_ground_truth_filepath, "w") as gt_data:
         # TODO: write ground_truth_history to a file

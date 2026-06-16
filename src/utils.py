@@ -144,7 +144,12 @@ class Landmark:
         Return in string format.
         """
         return f"L{self.id}" + self.pos.to_string()
-
+    
+    def to_list(self):
+        """
+        Return indexable list
+        """
+        return [self.pos.x, self.pos.y, self.id]
 
 @dataclass(frozen=True)
 class BearingRange:
