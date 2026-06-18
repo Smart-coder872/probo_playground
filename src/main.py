@@ -9,15 +9,17 @@ from extended_kalman_filter import ExtendedKalmanFilter
 from utils import Position, Pose, Landmark, Bounds
 import numpy as np
 import pandas as pd
+import csv
 
 if __name__ == "__main__":
     # set up the environment
     # TODO: choose values for each input parameter, using the expected datatype
-    dimensions = 10             #vertical length or horizontal length in meters
+    dimensions = Bounds(x_min=0, x_max=10, y_min=0, y_max=10)    #vertical length or horizontal length in meters
     dt = 0.1                    #0.1 seconds per step
     obstacles = [
-        [5, 7, 5, 7],            # x_min, x_max, y_min, y_max
-        [0, 4, 6, 8]]           # additional obstacle
+    Bounds(x_min=5, x_max=7, y_min=5, y_max=7),
+    Bounds(x_min=0, x_max=4, y_min=6, y_max=8)
+    ]
     
     landmarks = [
           Landmark(Position(2.0, 2.0), id=1),            # x, y
@@ -153,9 +155,9 @@ if __name__ == "__main__":
     # at the end, write the histories into output files
     with open(output_ground_truth_filepath, "w") as gt_data:
         # TODO: write ground_truth_history to a file
-        gt_data.write(ground_truth_history)
+        gt_data.write(ground_truth_history.to_csv(index=False))
     with open(output_sensor_data_filepath, "w") as sensor_data:
         # TODO: write sensor_data_history to a file
-        sensor_data.write(sensor_data_history)
+        sensor_data.write(sensor_data_history.to_csv(index=False))
     with open(output_kalman_filter_filepath, "w") as kalman_data:
-        kalman_data.write(kalman_filter_history)
+        kalman_data.write(kalman_filter_history.to_csv(index=False))
