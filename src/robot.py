@@ -71,12 +71,12 @@ class Robot:
         self.LIN_VEL = lin_vel
         self.ANG_VEL = ang_vel
        
-        dy = lin_vel * cos(self.env.robot_pose.theta) * self.env.DT #converts linear velocity input to dy
-        dx = lin_vel * sin(self.env.robot_pose.theta) * self.env.DT #converts linear velocity input to dx
-        dtheta = ang_vel * self.env.robot_pose.theta                #converts angular velocity input to dtheta
+        dx = lin_vel * cos(self.env.robot_pose.theta) * self.env.DT #converts linear velocity input to dy
+        dy = lin_vel * sin(self.env.robot_pose.theta) * self.env.DT #converts linear velocity input to dx
+        dtheta = ang_vel * self.env.DT                              #converts angular velocity input to dtheta
 
 
-        self.env.is_valid_motion(dx, dy, dtheta)
+        return self.env.is_valid_motion(dx, dy, dtheta)
 
     def robot_step_translational(self, x_vel: float, y_vel: float):
         """
@@ -92,13 +92,13 @@ class Robot:
             dy: change in y position
         """
         # TODO: (done) fill in the function
-        self.X_vel = x_vel
-        self.Y_vel = y_vel
+        self.X_VEL = x_vel
+        self.Y_VEL = y_vel
         
         dx = x_vel * self.env.DT
         dy = y_vel * self.env.DT
 
-        self.env.is_valid_motion(dx, dy, 0.0)
+        return self.env.is_valid_motion(dx, dy, 0.0)
 
     def take_sensor_measurements(self):
         """
