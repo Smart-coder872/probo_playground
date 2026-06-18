@@ -1,5 +1,5 @@
 """
-Main file for running the simulator.
+Ideation for main to implement local and relative ekf
 """
 
 from environment import Environment
@@ -7,8 +7,8 @@ from robot import Robot
 from kalman_filter import KalmanFilter
 from extended_kalman_filter import ExtendedKalmanFilter
 from utils import Position, Pose, Landmark, Bounds
-import numpy as np
 import pandas as pd
+import numpy as np
 import csv
 
 if __name__ == "__main__":
@@ -20,119 +20,102 @@ if __name__ == "__main__":
     Bounds(x_min=5, x_max=7, y_min=5, y_max=7),
     Bounds(x_min=0, x_max=4, y_min=6, y_max=8)
     ]
+    landmarks = None
+
+    robot_a_starting_pose = Pose(Position(0.0, 0.0), 0.6)  #x, y and theta
+    robot_b_starting_pose = Pose(Position(3.0, 3.0), 0.6)
     
-    landmarks = [
-          Landmark(Position(2.0, 2.0), id=1),            # x, y
-          Landmark(Position(5.0, 5.0), id=2),
-          Landmark(Position(8.0, 8.0), id=3)
-    ]              
-    robot_starting_pose = Pose(Position(0.0, 0.0), 0.6)  #x, y and theta
-    bearing = robot_starting_pose.theta
+    bearing_a = robot_a_starting_pose.theta
+    bearing_b = robot_b_starting_pose.theta
+
     env = Environment(
         dimensions,
         dt,
         obstacles,
         landmarks,
-        robot_starting_pose,
-        bearing
+        robot_a_starting_pose,
+        robot_b_starting_pose,
+        bearing_a,
+        bearing_b
     )
 
     # set up the robot
-    robot = Robot(env)
+    robot_a = Robot(env)
+    robot_b = Robot(env)
 
-    starting_states = np.array([robot_starting_pose.pos.x, robot_starting_pose.pos.y, robot_starting_pose.theta]).reshape(3,1)
+    a_starting_states = np.array([robot_a_starting_pose.pos.x, robot_a_starting_pose.pos.y, robot_a_starting_pose.theta]).reshape(3,1)
+    b_starting_states = np.array([robot_b_starting_pose.pos.x, robot_b_starting_pose.pos.y, robot_b_starting_pose.theta]).reshape(3,1)
+
 
     # set up the (Extended) Kalman Filter if bool LINEAR is True
-    LINEAR = True
-    if LINEAR:
-        kf = KalmanFilter(
-            dt=float(dt),
-            prior = starting_states,
-        )
-        # kf.predict()
-        # kf.update()
-    else:
-        # set up the Extended Kalman Filter
+    if robot_a:      #[DOUBLE CHECK]
         kf = ExtendedKalmanFilter(
-            dt,
-            robot_starting_pose,
-            
+            float(dt),
+            a_starting_states,
         )
 
+    elif robot_b:      #[DOUBLE CHECK]
+        kf = ExtendedKalmanFilter(
+            float(dt),
+            b_starting_states,
+        )
+
+    else:
+        f"Robot not recognized as a or b"
     # set up timekeeping
     # TODO: (done) set the total_seconds variable to however long you want the simulator to run (not real-time!)
     total_seconds = 30                          #total run time
     total_timesteps = total_seconds / env.DT    #calculate time step
 
     # set up logging
-    ground_truth_history = pd.DataFrame()
-    sensor_data_history = pd.DataFrame()
-    kalman_filter_history = pd.DataFrame()
+    a_ground_truth_history = []
+    a_sensor_data_history = []
+    a_kalman_filter_history = []
+    a_relative_history = []
 
-    # set up input filepath and output filepath
-        # TODO: add which robot
+    b_ground_truth_history = []
+    b_sensor_data_history = []
+    b_kalman_filter_history = []
+    b_relative_history = []
 
-    input_commands_filepath = "./input/motor_commands.csv"
-    output_ground_truth_filepath = "./output/csv/ground_truth.csv"
-    output_sensor_data_filepath = "./output/csv/sensor_data.csv"
-    output_kalman_filter_filepath = "./output/csv/kalman_filter.csv"
-    
-    #measurement = robot.take_sensor_measurements().dropna()
-    #print(measurement.pivot(index = ['LV', 'AV', 'Noisy X', 'Noisy Y', 'LM Pinger'], columns = columns, values = values))
+    # set up input filepath and output filepaths
+    a_input_commands_filepath = "./input/a_motor_commands.csv" #[NEED TO CREATE FILE]
+    a_output_ground_truth_filepath = "./output/ground_truth_a.csv"
+    a_output_sensor_data_filepath = "./output/sensor_data_a.csv"
+    a_output_kalman_filter_filepath = "./output/kalman_filter_a.csv"
+    a_output_relative_filepath = "./output/relative_filter_a.csv"
 
-    # open up the instructions, pop the first
-    with open(input_commands_filepath, "r") as cmd:
+    b_input_commands_filepath = "./input/b_motor_commands.csv" #[NEED TO CREATE FILE]
+    b_output_ground_truth_filepath = "./output/ground_truth_b.csv"
+    b_output_sensor_data_filepath = "./output/sensor_data_b.csv"
+    b_output_kalman_filter_filepath = "./output/kalman_filter_b.csv"
+    a_output_relative_filepath = "./output/relative_filter_b.csv"
+
+
+    # open up the instructions for robot a, pop the first
+    with open(a_input_commands_filepath, "r") as cmd:
         # iterate through each timestep
         for step in range(int(total_timesteps) + 1):
             # TODO: (done) take a ground truth snapshot and add it to the history
-            ground_truth_history = pd.concat(
-                    [
-                        ground_truth_history,
-                        env.take_state_snapshot(),
-                    ],
-                    ignore_index=True,
-                )
+            a_ground_truth_history.append(env.take_state_snapshot(0))
             # TODO: (done) take sensor measurements and add it to the history
-            sensor_data_history = pd.concat(
-                    [
-                        sensor_data_history,
-                        robot.take_sensor_measurements(),
-                    ],
-                    ignore_index=True,
-                )
-            if LINEAR:
-                # TODO: (done) call the Kalman Filter prediction step            
-                sensor_data = robot.take_sensor_measurements()
-                kf.predict(sensor_data[['LV_X', 'LV_Y', 'AV']].dropna().values)
+            a_sensor_data_history.append(robot_a.take_sensor_measurements())
+            # TODO: (done) call the Kalman Filter prediction step            
+            kf.predict(robot_a.take_sensor_measurements())
                 # TODO: (done) call the Kalman Filter update step if new sensor data is available
-                
-                z = np.array((env.get_proximity_to_landmarks()[1], env.get_proximity_to_landmarks()[2]))
-                id = env.get_proximity_to_landmarks()[0]
-                R = robot.sensors["LandmarkPinger"].R(z)
-                H =  robot.sensors["LandmarkPinger"].H_eval(starting_states, id)
-                
-                kf.update(z, H, R)
-            else:
-                # TODO: (done) call the Extended Kalman Filter prediction step
-                kf.predict(robot.take_sensor_measurements())
-                # TODO: (done) call the Extended Kalman Filter update step if new sensor data is available, for each GPS reading and for each landmark ping
-                kf.update()
+            z = np.array((env.get_proximity_to_landmarks()[1], env.get_proximity_to_landmarks()[2]))
+            id = env.get_proximity_to_landmarks()[0]
+            R = robot.sensors["LandmarkPinger"].R(z)
+            H =  robot.sensors["LandmarkPinger"].H_eval(starting_states, id)
+            
+            local_data = kf.local_update(z, H, R)
+            a_kalman_filter_history.append(local_data)
+            
+            rel_data = kf.relative_update()
+            a_relative_history = a_relative_history.append(rel_data)
 
             # TODO: retrieve the next motor command from the input file
-    
-            # hit it!
-                # # retrieve new command if available or passed
-                if round(float(next_cmd[0]), 3) <= env.DT * step and not terminal:
-                    linear_input = float(next_cmd[1])
-                    angular_input = float(next_cmd[2])
-                    # out of commands
-                    try:
-                        next_cmd = next(vel_cmds)
-                    except StopIteration:
-                        terminal = True
-                
-                
-                
+            for data_point in a_input_commands_filepath:
                 if env.time < 5:
                     linear_input = data_point[1]
                     angular_input = data_point[2]
@@ -151,13 +134,18 @@ if __name__ == "__main__":
 
 
             # TODO: execute the motor command
-                robot.robot_step_differential(linear_input, angular_input)
+            robot_a.robot_step_differential(linear_input, angular_input)
+    
     # at the end, write the histories into output files
-    with open(output_ground_truth_filepath, "w") as gt_data:
+    with open(a_output_ground_truth_filepath, "w") as gt_data:
         # TODO: write ground_truth_history to a file
-        gt_data.write(ground_truth_history.to_csv(index=False))
-    with open(output_sensor_data_filepath, "w") as sensor_data:
+        gt_data.write(a_ground_truth_history)
+    with open(a_output_sensor_data_filepath, "w") as sensor_data:
         # TODO: write sensor_data_history to a file
-        sensor_data.write(sensor_data_history.to_csv(index=False))
-    with open(output_kalman_filter_filepath, "w") as kalman_data:
-        kalman_data.write(kalman_filter_history.to_csv(index=False))
+        sensor_data.write(a_sensor_data_history)
+    with open(a_output_kalman_filter_filepath, "w") as kalman_data:
+        kalman_data.write(a_kalman_filter_history)
+    with open(a_output_relative_filepath, "w") as relative_data:
+        relative_data.write(a_relative_history)
+
+    

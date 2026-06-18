@@ -18,7 +18,7 @@ import random
 from utils import wrap_angle
 
 
-class ExtendedKalmanFilter:
+class IteratedEKF:
     """
     This class implements the Extended Kalman Filter algorithm.
     """
@@ -28,9 +28,12 @@ class ExtendedKalmanFilter:
         Initialize an Extended Kalman Filter.
 
         A state vector includes the following:
-            x position
-            y position
-            heading
+            robot a x position
+            robot a y position
+            robot a heading
+            robot b x position
+            robot b y position
+            robot b heading
 
 
         Args:
@@ -41,7 +44,7 @@ class ExtendedKalmanFilter:
         self.DT:float = dt
 
         # TODO: (done) set the state vector to the given prior
-        self.x:np.ndarray = prior
+        self.x: np.ndarray = prior
 
         # TODO: (done) set the process model to an identity matrix
         self.P = np.eye(3)
@@ -66,9 +69,9 @@ class ExtendedKalmanFilter:
 
         # dictionary that maps Sympy symbols to numerical values. we will use these to substitute values into our symbolic matrices!
         self.subs: dict[Symbol, float] = {
-            x: self.x_state_ef[0],
-            y: self.x_state_ef[1],
-            theta: self.x_state_ef[2],
+            x: self.x[0],
+            y: self.x[1],
+            theta: self.x[2],
             v: 0,
             w: 0,
         }
@@ -109,8 +112,9 @@ class ExtendedKalmanFilter:
 
         # return state vector and state covariance
         return self.x_state_ef, self.P
+    
 
-    def update(
+    def relative_update(
         self,
         H: np.ndarray,
         R: np.ndarray,
@@ -148,22 +152,24 @@ class ExtendedKalmanFilter:
             and the observation expected by the predicted state
         """
         # TODO: (done) calculate the total uncertainty in the system
-        S = H * self.P * H.T + R
+        for i in range(5):
+            S = H * self.P * H.T + R
 
-        # TODO: (done) calculate the Kalman Gain
-        K = self.P * H.T * matrix2numpy(Inverse(S))
+            # TODO: (done) calculate the Kalman Gain
+            K = self.P * H.T * matrix2numpy(Inverse(S))
 
-        if y is None:
-            y = z - H @ self.x_state_ef
+            if y is None:
+                y = z - H @ self.x_state_ef
 
-        # TODO: (done) update state vector
-        self.x_state_ef += K * y
+            # TODO: (done) update state vector
+            self.x_state_ef += K * y
 
-        # TODO: (done) update process model
-        self.P -= K * H.T * self.P
+            # TODO: (done) update process model
+            self.P -= K * H.T * self.P
 
-        # return state vector and process model
-        return self.x_state_ef, self.P
+            # return state vector and process model
+            return self.x_state_ef, self.P
+    
 
     def get_Q(self):
         """
