@@ -12,8 +12,6 @@ the robot's state is a vector that includes three state variables:
 x position, y position, and heading.
 """
 
-import math
-import pandas as pd
 from utils import Position, Pose, Bounds, Landmark, BearingRange, wrap_angle
 from numpy import sqrt, arctan2
 from pandas import DataFrame
@@ -36,7 +34,8 @@ class Environment:
         dt: float,
         obstacles: list[Bounds],
         landmarks: list[Landmark],
-        robot_starting_pose: Pose,
+        robot_a_starting_pose: Pose,
+        robot_b_starting_pose: Pose,
         bearing: BearingRange
     ):
         """
@@ -64,9 +63,9 @@ class Environment:
         self.BEARING = bearing
 
         # TODO (done): set the robot pose property to the parameter value
-        self.robot_pose = robot_starting_pose
+        self.robot_poses = [robot_a_starting_pose, robot_b_starting_pose]
 
-    def robot_step(self, dx: float, dy: float, dtheta: float):
+    def robot_step(self, dx: float, dy: float, dtheta: float, which_robot: bool):
         """
         Update the robot's position and heading in the world.
         The robot should not be able to pass through obstacles
@@ -76,21 +75,36 @@ class Environment:
             dx: change in x position
             dy: change in y position
             dtheta: change in heading
+            which_robot: specify robot a or b where 0 is a and 1 is b
 
         Returns:
             Nothing, but update the robot_pose property at the end
         """
         # TODO: (done) fill in the function
-        self.robot_pose.pos.x += dx             ##Update x
-        self.robot_pose.pos.y += dy             ##Update y
+        if which_robot == 0:                            ##If robot a
+            self.robot_poses[0].pos.x += dx             ##Update x
+            self.robot_poses[0].pos.y += dy             ##Update y
         
-        self.robot_pose.theta = wrap_angle(
-            self.robot_pose.theta + dtheta)     ##Update heading
+            self.robot_poses[0].theta = wrap_angle(
+            self.robot_poses[0].theta + dtheta)     ##Update heading
+            
+            self.time += self.DT                    ##Update time step
+
         
-        self.time += self.DT                    ##Update time step
+        elif which_robot == 1:
+            self.robot_poses[1].pos.x += dx             ##Update x
+            self.robot_poses[1].pos.y += dy             ##Update y
+        
+            self.robot_poses[1].theta = wrap_angle(
+            self.robot_poses[1].theta + dtheta)     ##Update heading
+            
+            self.time += self.DT                    ##Update time step
+        
+        else:
+            f"Robot is not recognized as a or b"
         
 
-    def is_valid_motion(self, dx: float, dy: float, dtheta: float):
+    def is_valid_motion(self, dx: float, dy: float, dtheta: float, which_robot: bool):
         """
         Given attempted x and y motion by the robot, determine
         what motion is physically possible (i.e. doesn't go through
@@ -107,25 +121,42 @@ class Environment:
 
         
         # TODO: (done) fill in the function
-        attempted_x = self.robot_pose.pos.x + dx   #Calculate new x without storing in instance
-        attempted_y = self.robot_pose.pos.y + dy   #Calculate new y without storing in instance
+        if which_robot == 0:                               #If robot a...
+            attempted_x = self.robot_poses[0].pos.x + dx   #Calculate new x without storing in instance
+            attempted_y = self.robot_poses[0].pos.y + dy   #Calculate new y without storing in instance
         
-        if self.DIMENSIONS.within_bounds(
-            Position(attempted_x, attempted_y)): ##If dx and dy are valid...
-            self.robot_step(dx, dy, dtheta)      ##...Update robot pose
-            return self.robot_pose               ##...Output the new heading and position
-        elif not self.DIMENSIONS.within_x(
-            attempted_x):                                    ##If dx is not valid...
-            print("Changing x motion by " + 
-                  dx + 
-                  "causes a collision or is out of bounds" ) ##...Print dx error message
-        
-        elif not self.DIMENSIONS.within_y(attempted_y):      ##If dy is not valid...
-            print("Changing y motion by " + 
-                  dy + 
-                  "causes a collision or is out of bounds")  ##...Print dy error message
+            if self.DIMENSIONS.within_bounds(
+                Position(attempted_x, attempted_y)
+                ):                                              ##If dx and dy are valid...
+                self.robot_step(dx, dy, dtheta, 0)              ##...Update robot pose
+                
+                return self.robot_poses[0]                      ##...Output the new heading and position
+            elif not self.DIMENSIONS.within_x(attempted_x):                                   ##If dx is not valid...
+                f"X motion change for robot_a by {dx} causes a collision or is out of bounds" ##...Print dx error message
+            
+            elif not self.DIMENSIONS.within_y(attempted_y):                                   ##If dy is not valid...
+                f"Y motion change for robot_b by {dy} causes a collision or is out of bounds" ##...Print dy error message
 
-    def is_valid_position(self, position: Position):
+        
+        elif which_robot == 1:                             #If robot b...
+            attempted_x = self.robot_poses[1].pos.x + dx   #Calculate new x without storing in instance
+            attempted_y = self.robot_poses[1].pos.y + dy   #Calculate new y without storing in instance
+        
+            if self.DIMENSIONS.within_bounds(
+                Position(attempted_x, attempted_y)
+                ):                                              ##If dx and dy are valid...
+                self.robot_step(dx, dy, dtheta, 1)              ##...Update robot pose
+                
+                return self.robot_poses[1]                      ##...Output the new heading and position
+            elif not self.DIMENSIONS.within_x(attempted_x):                                   ##If dx is not valid...
+                f"X motion change for robot_a by {dx} causes a collision or is out of bounds" ##...Print dx error message
+            
+            elif not self.DIMENSIONS.within_y(attempted_y):                                   ##If dy is not valid...
+                f"Y motion change for robot_b by {dy} causes a collision or is out of bounds" ##...Print dy error message
+        else:
+            f"Robot is not recognized as a or b"
+
+    def is_valid_position(self, position: Position, which_robot: bool):
         """
         Check if a given robot position is valid;
         i.e. not out-of-bounds or within an obstacle.
@@ -138,63 +169,92 @@ class Environment:
             true if the position is valid and false otherwise
         """
         # TODO: (done) fill in the function
-        if self.DIMENSIONS.within_bounds(position): #If the robot position is within bounds...
-            return True                             #...This condition is true
-        else:                                       #Otherwise...        
-            return False                            #This condition is false
+        if which_robot == 0:                            #If robot a
+            if self.DIMENSIONS.within_bounds(position): #If the robot position is within bounds...
+                return True                             #...This condition is true
+            else:                                       #Otherwise...        
+                return False                            #This condition is false
+        elif which_robot == 1:
+            if self.DIMENSIONS.within_bounds(position): #If the robot position is within bounds...
+                return True                             #...This condition is true
+            else:                                       #Otherwise...        
+                return False                            #This condition is false 
+        else:
+            f"Robot is not recognized as a or b"
 
-    def get_robot_pose(self):
+    def get_robot_pose(self, which_robot: bool):
         """
         Return the true robot pose.
         """
         # TODO: (done) fill in the function
-        return self.robot_pose          #Output current robot position and heading
+        if which_robot == 0:
+            return self.robot_poses[0]          #Output current robot position and heading
+        elif which_robot == 1:
+            return self.robot_poses[1]
+        else:
+            f"Robot is not recognized as a or b"
 
-    def get_proximity_to_landmarks(self):
+    def get_proximity_to_robot(self, which_robot: bool):
         """
         Return a list of the robot's true range and bearing to all landmarks.
         """
         # TODO: (done) fill in the function
-        landmark_proximities = []
-
-        for landmark in self.LANDMARKS:
-            land_list = landmark.to_list()
-            l_x = land_list[0]
-            l_y = land_list[1]
-            x_range = l_x - self.robot_pose.pos.x
-            y_range = l_y - self.robot_pose.pos.y
-            range = math.sqrt(x_range**2 + y_range**2)
+        robot_a_x = self.robot_poses[0].pos.x
+        robot_a_y = self.robot_poses[0].pos.y
             
+        robot_b_x = self.robot_poses[1].pos.x
+        robot_b_y = self.robot_poses[1].pos.y
 
+        x_range = robot_a_x - robot_b_x
+        y_range = robot_a_y - robot_b_y
+        range = sqrt(x_range**2 + y_range**2)
 
-            bearing = math.atan2(y_range, x_range) - self.robot_pose.theta
-            bearing = (bearing + math.pi) % (2 * math.pi) - math.pi
+        total_angle = arctan2(y_range, x_range)
+
+        if which_robot == 0:        
             
-            proximities = [land_list[2], bearing, range]
-            landmark_proximities.append(proximities)
-            #landmark_proximities[f"Landmark{landmark.id}"] = [BearingRange(bearing, range)]
-
-            # total_angle = arctan2(y_range, x_range)
-            # bearing = total_angle - self.robot_pose.theta
+            bearing = total_angle - self.robot_poses[0].theta
+        elif which_robot == 1:        
             
-            # result = range, bearing 
-            # landmark_proximities.append(result)
-        return landmark_proximities     
+            bearing = total_angle - self.robot_poses[1].theta
+        else:        
+            
+            f"Robot is not recognized as a or b"        
+                
+        
+        result = range, bearing 
+                
+ 
+        return result   
 
-    def take_state_snapshot(self):
+    def take_state_snapshot(self, which_robot: bool):
         """
         Return true state information about this timestep,
         including time, robot position, and the robot's bearing/range
         to landmarks, in a table format.
         """
         # TODO: (done) fill in the function
+        if which_robot == 0:        
+            snapshot = DataFrame(
+                {"Time": [self.time],
+                "Robot a pos": [self.robot_poses[0]],
+                "Range:": [self.get_proximity_to_robot(0)[0]],
+                "Robot a bearing": [self.get_proximity_to_robot(0)[1]]
+                })
         
-        snapshot = DataFrame(
-            {"Time": [self.time],
-             "Robot pos": [self.robot_pose],
-             "Range:": [self.get_proximity_to_landmarks()[0]],
-             "Bearing": [self.get_proximity_to_landmarks()[1]]}
-        )
+        elif which_robot == 1:        
+            
+            snapshot = DataFrame(
+                {"Time": [self.time],
+                "Robot b pos": [self.robot_poses[1]],
+                "Range:": [self.get_proximity_to_robot(0)[0]],
+                "Robot b bearing": [self.get_proximity_to_robot(1)[1]]
+                })
+        else:        
+            
+            f"Robot is not recognized as a or b"     
+        
+
         return snapshot
     
     def get_environment_info(self):

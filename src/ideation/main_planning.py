@@ -2,7 +2,7 @@
 Ideation for main to implement local and relative ekf
 """
 
-from env_planning import Environment
+from environment import Environment
 from robot import Robot
 from kalman_filter import KalmanFilter
 from extended_kalman_filter import ExtendedKalmanFilter
