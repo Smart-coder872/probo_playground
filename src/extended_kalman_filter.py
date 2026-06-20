@@ -9,10 +9,10 @@ u = [v, w]
 """
 
 import numpy as np
-from numpy import cos, sin, ndarray
+from numpy import ndarray
 import sympy
 from sympy.abc import x, y, v, w, R, theta
-from sympy import Matrix, Symbol, Identity, Inverse, matrix2numpy
+from sympy import Matrix, Symbol, Identity, Inverse, matrix2numpy, cos, sin
 import random
 
 from utils import wrap_angle
@@ -31,9 +31,8 @@ class IteratedEKF:
             robot a x position
             robot a y position
             robot a heading
-            robot b x position
-            robot b y position
-            robot b heading
+            robot a_b bearing
+            robot a_b range
 
 
         Args:
@@ -44,12 +43,13 @@ class IteratedEKF:
         self.DT:float = dt
 
         # TODO: (done) set the state vector to the given prior
-        self.x: np.ndarray = prior
+        self.x = prior
 
         # TODO: (done) set the process model to an identity matrix
         self.P = np.eye(3)
 
         # TODO: (done) define the nonlinear state transition model
+        
         self.f_xu: Matrix = Matrix(
             [
                 [x + v*cos(theta)*self.DT],  # calculation of x
@@ -59,13 +59,9 @@ class IteratedEKF:
         )
 
         # TODO: (done) define the Jacobian of the motion model symbolically
-        self.F: Matrix = self.f_xu.jacobian()
+        self.F: Matrix = self.f_xu.jacobian([x, y, theta])
 
-        self.B: ndarray = ndarray(
-            [self.DT, 0, 0],
-            [0, self.DT, 0],
-            [0, 0, self.DT]
-        )
+        self.B = self.DT * np.eye(3)
 
         # dictionary that maps Sympy symbols to numerical values. we will use these to substitute values into our symbolic matrices!
         self.subs: dict[Symbol, float] = {
@@ -74,9 +70,9 @@ class IteratedEKF:
             theta: self.x[2],
             v: 0,
             w: 0,
-        }
+        } 
 
-    def predict(self, u: np.ndarray):
+    def predict(self, u: np.array):
         """
         Predicts the next state vector and its covariance matrix
         using the state transition matrix and an input control vector.
@@ -92,26 +88,26 @@ class IteratedEKF:
             u: the input control vector
         """
         # TODO: (done) set the value of each symbolic substitution to the actual numerical value being tracked by the EKF
-        self.subs[x] = self.x_state_ef[0]
-        self.subs[y] = self.x_state_ef[1]
-        self.subs[theta] = self.x_state_ef[2]
-        self.subs[v] = u[0]
-        self.subs[w] = u[1]
+        self.subs[x] = self.x[0].item()
+        self.subs[y] = self.x[1].item()
+        self.subs[theta] = self.x[2].item()
+        self.subs[v] = u[0].item()
+        self.subs[w] = u[1].item()
 
         # TODO: (done) evaluate the nonlinear motion model f(x,u) at the subsitution values
         fxu_eval = matrix2numpy(self.f_xu.subs(self.subs))
 
         # TODO: (done) evaluate the Jacobian matrix F at the substitution values
-        F_eval = matrix2numpy(self.F.subs(fxu_eval))
+        F_eval = matrix2numpy(self.F.subs(self.subs))
 
         # TODO: (done) calculate the next state prediction
-        self.x_state_ef = F_eval*self.x_state_ef + self.B*u
+        self.x = fxu_eval
 
         # TODO: (done) calculate the next covariance prediction
-        self.P = F_eval*self.P*F_eval.T + self.get_Q()
+        self.P = F_eval@self.P@F_eval.T + self.get_Q()
 
         # return state vector and state covariance
-        return self.x_state_ef, self.P
+        return self.x, self.P
     
 
     def relative_update(
@@ -153,22 +149,22 @@ class IteratedEKF:
         """
         # TODO: (done) calculate the total uncertainty in the system
         for i in range(5):
-            S = H * self.P * H.T + R
+            S = H @ self.P @ H.T + R
 
             # TODO: (done) calculate the Kalman Gain
-            K = self.P * H.T * matrix2numpy(Inverse(S))
+            K = self.P @ H.T @ matrix2numpy(np.linalg.inv(S))
 
             if y is None:
-                y = z - H @ self.x_state_ef
+                y = z - H @ self.x
 
             # TODO: (done) update state vector
-            self.x_state_ef += K * y
+            self.x += K @ y
 
             # TODO: (done) update process model
-            self.P -= K * H.T * self.P
+            self.P -= K @ H.T @ self.P
 
             # return state vector and process model
-            return self.x_state_ef, self.P
+            return self.x, self.P
     
 
     def get_Q(self):

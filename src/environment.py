@@ -21,11 +21,14 @@ class Environment:
     A class that models the world simulation environment and the robot's state.
 
     Attributes:
-        dimensions: the horizontal and vertical size of the world
+        dimensions: the horizontal and vertical borders of the world
         dt: the length of each timestep, in seconds
-        obstacles: a list of obstacles
-        landmarks: a list of landmarks
-        robot_pose: the position and heading of the robot in the world
+        obstacles: a list of obstacles using Bounds class
+        landmarks: a list of landmarks using Landmark class
+        robot_a_starting_pose: the position and heading of one robot in the world
+        robot_b_starting_pose: the position and heading of another in the world
+        robot_a_bearing: the initial bearing of one robot
+        robot_b_bearing: the initial bearing of another robot
     """
 
     def __init__(
@@ -36,17 +39,14 @@ class Environment:
         landmarks: list[Landmark],
         robot_a_starting_pose: Pose,
         robot_b_starting_pose: Pose,
-        bearing: BearingRange
+        robot_a_bearing: BearingRange,
+        robot_b_bearing: BearingRange
     ):
         """
         Initialize an instance of the Environment class.
 
-        Args:
-            dimensions: the horizontal and vertical size of the world
-            dt: the length of each timestep, in seconds
-            obstacles: a list of obstacles
-            landmarks: a list of landmarks
-            robot_starting_pose: the initial position and heading of the robot
+        Store each attritute as a referenceable variable using self
+
         """
         # TODO (done): set the dimensions property to the parameter value
         self.DIMENSIONS = dimensions
@@ -60,7 +60,7 @@ class Environment:
         # TODO (done): set the obstacles and landmarks properties to the parameter lists
         self.OBSTACLES = obstacles
         self.LANDMARKS = landmarks
-        self.BEARING = bearing
+        self.robot_bearings = [robot_a_bearing, robot_b_bearing]
 
         # TODO (done): set the robot pose property to the parameter value
         self.robot_poses = [robot_a_starting_pose, robot_b_starting_pose]
@@ -81,7 +81,7 @@ class Environment:
             Nothing, but update the robot_pose property at the end
         """
         # TODO: (done) fill in the function
-        if which_robot == 0:                            ##If robot a
+        if which_robot == 0:                            ##If robot a...
             self.robot_poses[0].pos.x += dx             ##Update x
             self.robot_poses[0].pos.y += dy             ##Update y
         
@@ -91,7 +91,7 @@ class Environment:
             self.time += self.DT                    ##Update time step
 
         
-        elif which_robot == 1:
+        elif which_robot == 1:                          #Of robot b...
             self.robot_poses[1].pos.x += dx             ##Update x
             self.robot_poses[1].pos.y += dy             ##Update y
         
@@ -194,65 +194,45 @@ class Environment:
         else:
             f"Robot is not recognized as a or b"
 
-    def get_proximity_to_robot(self, which_robot: bool):
+    def get_proximity_to_robot(self, which_robot: bool, which_other:bool):
         """
         Return a list of the robot's true range and bearing to all landmarks.
         """
         # TODO: (done) fill in the function
-        robot_a_x = self.robot_poses[0].pos.x
-        robot_a_y = self.robot_poses[0].pos.y
+        robot_a_x = self.robot_poses[which_robot].pos.x
+        robot_a_y = self.robot_poses[which_robot].pos.y
             
-        robot_b_x = self.robot_poses[1].pos.x
-        robot_b_y = self.robot_poses[1].pos.y
+        robot_b_x = self.robot_poses[which_other].pos.x
+        robot_b_y = self.robot_poses[which_other].pos.y
 
         x_range = robot_a_x - robot_b_x
         y_range = robot_a_y - robot_b_y
         range = sqrt(x_range**2 + y_range**2)
 
         total_angle = arctan2(y_range, x_range)
-
-        if which_robot == 0:        
+       
             
-            bearing = total_angle - self.robot_poses[0].theta
-        elif which_robot == 1:        
-            
-            bearing = total_angle - self.robot_poses[1].theta
-        else:        
-            
-            f"Robot is not recognized as a or b"        
-                
-        
-        result = range, bearing 
+        bearing = total_angle - self.robot_poses[which_robot].theta     
+                       
+        result = [which_other, range, bearing] 
                 
  
         return result   
 
-    def take_state_snapshot(self, which_robot: bool):
+    def take_state_snapshot(self, which_robot: bool, which_other:bool):
         """
         Return true state information about this timestep,
         including time, robot position, and the robot's bearing/range
         to landmarks, in a table format.
         """
-        # TODO: (done) fill in the function
-        if which_robot == 0:        
-            snapshot = DataFrame(
-                {"Time": [self.time],
-                "Robot a pos": [self.robot_poses[0]],
-                "Range:": [self.get_proximity_to_robot(0)[0]],
-                "Robot a bearing": [self.get_proximity_to_robot(0)[1]]
-                })
-        
-        elif which_robot == 1:        
-            
-            snapshot = DataFrame(
-                {"Time": [self.time],
-                "Robot b pos": [self.robot_poses[1]],
-                "Range:": [self.get_proximity_to_robot(0)[0]],
-                "Robot b bearing": [self.get_proximity_to_robot(1)[1]]
-                })
-        else:        
-            
-            f"Robot is not recognized as a or b"     
+        # TODO: (done) fill in the function       
+        snapshot = DataFrame(
+            {"Time": [self.time],
+            "Robot pos": [self.robot_poses[which_robot]],
+            "Range:": [self.get_proximity_to_robot(which_robot, which_other)[0]],
+            "Robot bearing": [self.get_proximity_to_robot(which_robot, which_other)[1]]
+            })
+           
         
 
         return snapshot

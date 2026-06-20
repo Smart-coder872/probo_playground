@@ -1,118 +1,171 @@
 """
-A simulated robotic agent with teleoperation and sensing capabilities.
-
-The Robot class models the robotic agent that explores the world.
-The robot is remote-controlled by angular and linear velocity commands
-read from an external file. The robot can execute motor commands to move,
-and can sense both externally (GPS, landmarks, obstacles) and internally (odometry, IMU).
+Robot class for the simulation environment.
 """
 
-from environment import Environment
-from sensors import SensorInterface, WheelEncoder, LandmarkPinger, GPS
-from numpy import cos, sin
-import pandas as pd
-from pandas import DataFrame
+from sensors import WheelEncoder, LandmarkPinger, GPS, RobotPinger
+from math import cos, sin
 
 
 class Robot:
     """
-    A class that models a simulated robotic agent.
+    A class that represents a mobile robot operating in 2D.
 
     Attributes:
-        env: the environment this robot is operating in
-        sensors: list of all robot sensors
+        env: reference to the simulation environment
+        robot_id: identifier for this robot (0 for robot_a, 1 for robot_b)
+        LIN_VEL: current linear velocity (m/s)
+        ANG_VEL: current angular velocity (rad/s)
+        sensors: dictionary of sensor instances attached to this robot
     """
 
-    def __init__(self, env: Environment, sensor_info=dict):
+    def __init__(self, env, robot_id: int, other_id: int, use_robot_pinger: bool = True):
         """
-        Initialize an instance of the Robot class.
+        Initialize a Robot instance.
 
         Args:
-            env: the environment this robot is operating in
+            env: reference to the Environment
+            robot_id: identifier for this robot (0 or 1)
+            use_robot_pinger: whether to include the RobotPinger sensor
         """
-        # TODO: (done) set the environment property to the parameter value
         self.env = env
-        self.LIN_VEL = 0.0
-        self.ANG_VEL = 0.0
+        self.ROBOT_ID = robot_id  # Track which robot this is
+        self.OTHER_ID = other_id
+        self.LIN_VEL = 0.0  # m/s
+        self.ANG_VEL = 0.0  # rad/s
 
-        # TODO: (done)initialize the sensors property as an empty list
-        gps_info = sensor_info["GPS"]
-
-        self.sensors: dict[str, SensorInterface]= {
-            "GPS": GPS(
-                #initialize GPS class
-                robot=self
-            ),
-            "LandmarkPinger": LandmarkPinger(
-                #initialize Landmark Pinger class
-                robot=self
-            ),
-            "WheelEncoder": WheelEncoder(
-                #initialize WheelEncoder class
-                robot = self
-            )
+        # Initialize sensors for this robot
+        self.sensors = {
+            "WheelEncoder": WheelEncoder(self),
+            "LandmarkPinger": LandmarkPinger(self),
+            "GPS": GPS(self),
         }
 
-    def robot_step_differential(self, lin_vel: float, ang_vel: float):
-        """
-        Differential-drive mode. Given forward linear and angular velocities,
-        determine the robot's change in x, y, and heading and apply those changes in the environment.
-
-        Args:
-            lin_vel: input linear velocity command
-            ang_vel: input angular velocity command
-
-        Returns:
-            dx: change in x position
-            dy: change in y position
-            d-theta: change in heading
-        """
-        # TODO: (done) fill in the function
-        self.LIN_VEL = lin_vel
-        self.ANG_VEL = ang_vel
-       
-        dx = lin_vel * cos(self.env.robot_pose.theta) * self.env.DT #converts linear velocity input to dy
-        dy = lin_vel * sin(self.env.robot_pose.theta) * self.env.DT #converts linear velocity input to dx
-        dtheta = ang_vel * self.env.DT                              #converts angular velocity input to dtheta
-
-
-        return self.env.is_valid_motion(dx, dy, dtheta)
-
-    def robot_step_translational(self, x_vel: float, y_vel: float):
-        """
-        Swerve-drive mode. Given x and y velocities,
-        determine the robot's change in x, y, and apply those changes in the environment.
-
-        Args:
-            x_vel: input x velocity command
-            y_vel: input y velocity command
-
-        Returns:
-            dx: change in x position
-            dy: change in y position
-        """
-        # TODO: (done) fill in the function
-        self.X_VEL = x_vel
-        self.Y_VEL = y_vel
-        
-        dx = x_vel * self.env.DT
-        dy = y_vel * self.env.DT
-
-        return self.env.is_valid_motion(dx, dy, 0.0)
+        # Add RobotPinger if multiple robots in environment
+        if use_robot_pinger and len(env.robot_poses) > 1:
+            self.sensors["RobotPinger"] = RobotPinger(self)
 
     def take_sensor_measurements(self):
         """
-        Return noisy sensor readings of the environment at this timestep, including data from all sensors, in a table format.
-        """
-        # TODO: fill in the function
-        wheelencoder_measurements = self.sensors["WheelEncoder"].sample()
-        gps_measurements =self.sensors["GPS"].sample()
-        lmpinger_measurements = self.sensors["LandmarkPinger"].sample()
+        Take measurements from all sensors on this robot.
         
-        sensor_measurements = pd.concat(
-            [wheelencoder_measurements,
-             gps_measurements,
-             lmpinger_measurements
-            ], axis=1
-        )
-        return sensor_measurements
+        Returns:
+            Dictionary of sensor measurements
+        """
+        measurements = {}
+        for sensor_name, sensor in self.sensors.items():
+            sample = sensor.sample()
+            sample["sensor"] = sensor_name
+            sample["robot_id"] = self.ROBOT_ID
+            sample["timestamp"] = self.env.time
+            measurements[sensor_name] = sample
+        return measurements
+
+    def robot_step_differential(self, linear_vel: float, angular_vel: float):
+        """
+        Execute a single timestep with differential drive kinematics.
+
+        Args:
+            linear_vel: desired linear velocity (m/s)
+            angular_vel: desired angular velocity (rad/s)
+        """
+        self.LIN_VEL = linear_vel
+        self.ANG_VEL = angular_vel
+
+        # Differential drive kinematics
+        dx = linear_vel * cos(self.env.robot_poses[self.ROBOT_ID].theta) * self.env.DT
+        dy = linear_vel * sin(self.env.robot_poses[self.ROBOT_ID].theta) * self.env.DT
+        dtheta = angular_vel * self.env.DT
+
+        # Update robot position in environment
+        self.env.is_valid_motion(dx, dy, dtheta, self.ROBOT_ID)
+
+    def robot_step_unicycle(self, linear_vel: float, angular_vel: float):
+        """
+        Execute a single timestep with unicycle kinematics.
+        Alternative to differential drive.
+
+        Args:
+            linear_vel: desired linear velocity (m/s)
+            angular_vel: desired angular velocity (rad/s)
+        """
+        self.LIN_VEL = linear_vel
+        self.ANG_VEL = angular_vel
+
+        # Unicycle kinematics
+        L = 0.1  # wheelbase (meters) - adjust as needed
+        dx = linear_vel * cos(self.env.robot_poses[self.ROBOT_ID].theta) * self.env.DT
+        dy = linear_vel * sin(self.env.robot_poses[self.ROBOT_ID].theta) * self.env.DT
+        dtheta = (linear_vel / L) * angular_vel * self.env.DT
+
+        # Update robot position in environment
+        self.env.is_valid_motion(dx, dy, dtheta, self.ROBOT_ID)
+
+    def get_estimated_state(self, filter):
+        """
+        Get state estimate from a Kalman filter.
+
+        Args:
+            filter: KalmanFilter or IteratedEKF instance
+
+        Returns:
+            State vector [x, y, theta]
+        """
+        return filter.x_state_ef
+
+    def get_other_robots(self):
+        """
+        Get information about other robots in the environment.
+        Useful for decentralized swarm coordination.
+
+        Returns:
+            List of other robot IDs and their poses
+        """
+        other_robots = []
+        for other_id, pose in enumerate(self.env.robot_poses):
+            if other_id != self.ROBOT_ID:
+                other_robots.append((other_id, pose))
+        return other_robots
+
+    def sense_other_robots(self):
+        """
+        Get sensor measurements of other robots via RobotPinger.
+        
+        Returns:
+            Sensor measurements of other robots, or None if no RobotPinger
+        """
+        if "RobotPinger" in self.sensors:
+            return self.sensors["RobotPinger"].sample()
+        return None
+
+    def sense_landmarks(self):
+        """
+        Get sensor measurements of landmarks via LandmarkPinger.
+        
+        Returns:
+            Sensor measurements of landmarks
+        """
+        if "LandmarkPinger" in self.sensors:
+            return self.sensors["LandmarkPinger"].sample()
+        return None
+
+    def sense_velocity(self):
+        """
+        Get sensor measurements of velocities via WheelEncoder.
+        
+        Returns:
+            Sensor measurements of linear and angular velocities
+        """
+        if "WheelEncoder" in self.sensors:
+            return self.sensors["WheelEncoder"].sample()
+        return None
+
+    def sense_position(self):
+        """
+        Get sensor measurements of position via GPS.
+        
+        Returns:
+            Sensor measurements of position
+        """
+        if "GPS" in self.sensors:
+            return self.sensors["GPS"].sample()
+        return None
